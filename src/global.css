@@ -1,0 +1,87 @@
+:root {
+	--sub-container-diagonal: -7deg;
+	--top-calc: 6%;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	display: border-box;
+	font-family: 'Roboto';
+	color: #222121;
+}
+
+.hidden {
+	display: none;
+}
+
+@-webkit-keyframes btnAppear {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes btnAppear {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+.btn:link,
+.btn:visited {
+	display: inline-block;
+	text-transform: uppercase;
+	text-decoration: none;
+	background-color: #cafafe;
+	color: #222121;
+	border-radius: 100px;
+	-webkit-transition: all 0.2s;
+	transition: all 0.2s;
+}
+
+.btn:hover {
+	-webkit-transform: translateY(-3px);
+	transform: translateY(-3px);
+	-webkit-box-shadow: 5px 5px 15px;
+	box-shadow: 5px 5px 15px;
+}
+
+.btn:active {
+	-webkit-transform: translateY(-1px);
+	transform: translateY(-1px);
+	-webkit-box-shadow: 5px 5px 5px;
+	box-shadow: 5px 5px 5px;
+}
+
+.btn:focus {
+	outline: none;
+}
+
+.btn-main {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-ms-flex-item-align: center;
+	align-self: center;
+	padding: 20px 45px;
+	width: -webkit-fit-content;
+	width: -moz-fit-content;
+	width: fit-content;
+	border-radius: 0.2em;
+	margin: 20px;
+	font-size: 1.5vmax;
+	background-color: #97caef;
+	text-transform: uppercase;
+	-webkit-animation-fill-mode: backwards;
+	animation-fill-mode: backwards;
+}
+
+.btn-nav {
+	padding: 5px 15px;
+}
