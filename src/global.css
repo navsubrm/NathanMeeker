@@ -1,6 +1,11 @@
 :root {
 	--sub-container-diagonal: -7deg;
 	--top-calc: 6%;
+	--shadow-color: rgba(0, 0, 0, 0.5);
+	--orange: rgb(238, 174, 37);
+	--blue: rgb(151, 202, 239);
+	--light-blue: rgb(202, 250, 254);
+	--black: #222121;
 }
 
 * {
@@ -9,6 +14,20 @@
 	display: border-box;
 	font-family: 'Roboto';
 	color: #222121;
+}
+
+html {
+	height: 100%;
+}
+
+body {
+	display: grid;
+	grid: auto / 1fr;
+}
+
+footer {
+	margin-top: auto;
+	grid-column: 1/ -1;
 }
 
 .hidden {
