@@ -2,7 +2,7 @@
 	--sub-container-diagonal: -7deg;
 	--top-calc: 6%;
 	--shadow-color: rgba(0, 0, 0, 0.5);
-	--orange: rgb(238, 174, 37);
+	--orange: rgb(238, 174, 37); /* If changed, update SubTitleBar color inputs. */
 	--blue: rgb(151, 202, 239);
 	--light-blue: rgb(202, 250, 254);
 	--black: #222121;
@@ -27,13 +27,9 @@
 }
 
 .container-border {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-content: center;
-	margin: 2em;
 	position: relative;
-	margin: 80px auto 80px auto;
+	margin: 40px auto 40px auto;
+	min-height: 90vh;
 }
 
 .hidden {
