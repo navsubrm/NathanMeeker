@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 	import TitleBar from '../components/TitleBar.svelte';
 	import { watchResize } from '../../node_modules/svelte-watch-resize';
+	import { fly, fade } from 'svelte/transition';
 
 	const adjustText = (node: any) => {
 		console.log('ran');
@@ -11,15 +10,6 @@
 		const angle = Math.atan2(sideA, sideB); //tangent of a/b gives angle in radians
 		document.documentElement.style.setProperty('--top-calc', `${650}%`);
 		document.documentElement.style.setProperty('--sub-container-diagonal', `-${angle}rad`);
-	};
-	let transitionValue = false;
-
-	const transition = () => {
-		transitionValue = true;
-		setTimeout(() => {
-			goto('/experience');
-			transitionValue = false;
-		}, 2000);
 	};
 </script>
 
@@ -32,22 +22,20 @@
 		console.log(e.target);
 	}} />
 
-<TitleBar />
-<div
-	id="card-container"
-	class="card card-container {transitionValue === true ? 'transition' : ''}"
-	use:watchResize={adjustText}
->
-	<div class="card-layout experience experience-btn">
-		<h1 class="card-title" on:click={transition}>Experience</h1>
+<div in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>
+	<TitleBar />
+	<div id="card-container" class="card card-container" use:watchResize={adjustText}>
+		<div class="card-layout experience experience-btn">
+			<h1 class="card-title"><a href="/experience">Experience</a></h1>
+		</div>
+		<div class="card-layout about about-btn">
+			<h1 class="card-title"><a href="/about">About</a></h1>
+		</div>
+		<div class="card-layout contact contact-btn">
+			<h1 class="card-title"><a href="/contact">Contact</a></h1>
+		</div>
+		<div class="card-layout extra extra-btn" />
 	</div>
-	<div class="card-layout about about-btn">
-		<h1 class="card-title"><a href="/about">About</a></h1>
-	</div>
-	<div class="card-layout contact contact-btn">
-		<h1 class="card-title"><a href="/contact">Contact</a></h1>
-	</div>
-	<div class="card-layout extra extra-btn" />
 </div>
 
 <style>
@@ -57,7 +45,6 @@
 
 	.card-layout {
 		position: absolute;
-		margin-top: 20px;
 		width: 100%;
 		height: 20vh;
 		-webkit-clip-path: polygon(0 100%, 100% 0, 100% 20%, 20% 100%);
@@ -141,10 +128,6 @@
 		transform: translateY(15vh);
 	}
 
-	.transition {
-		animation: fadeOut 2s linear forwards;
-	}
-
 	@-webkit-keyframes cardTitleText {
 		0% {
 			background-image: linear-gradient(-43deg, #222121 100%, #ffffff 100%);
@@ -178,15 +161,6 @@
 		}
 		100% {
 			background-image: linear-gradient(-43deg, #222121 100%, #ffffff 100%);
-		}
-	}
-
-	@keyframes fadeOut {
-		0% {
-			opacity: 1;
-		}
-		100% {
-			opacity: 0;
 		}
 	}
 </style>

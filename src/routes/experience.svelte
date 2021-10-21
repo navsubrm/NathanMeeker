@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { fly, fade } from 'svelte/transition';
+	import SubTitleBar from '../components/SubTitleBar.svelte';
 </script>
 
 <svelte:head>
 	<title>Nathan Meeker || Experience</title>
 </svelte:head>
 
-<div class="experience" class:active={$page.path === `/experience`}>
+<div in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>
+	<SubTitleBar title={'experience'} colorVar={'--orange'} />
 	<div class="container-border">
-		<h1 class="title">Personal and Professional Experience</h1>
-
-		<!-- Set up animation so that all of the balls are rotating with a stop animation on hover. -->
 		<div class="card-container">
 			<div class="card-sm">
 				<h1>General Experience</h1>
@@ -93,32 +93,21 @@
 				</div>
 			</div>
 		</div>
+		<p class="center-text">
+			<em>For further details, check out my social media links at the bottom of this page.</em>
+		</p>
 	</div>
-	<p class="center-text">
-		<em>For further details, check out my social media links at the bottom of this page.</em>
-	</p>
 </div>
 
 <style>
-	.container-border {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-content: center;
-		margin: 2em;
-	}
-	.experience {
-		position: relative;
-		margin: 80px auto;
-		/* background-color: var(--light-blue); */
-	}
-
 	.title {
 		text-align: center;
 		text-transform: uppercase;
+		font-size: 3em;
 	}
 
 	.card-sm {
+		position: relative;
 		width: 300px;
 		height: 300px;
 		padding: 40px;
@@ -128,11 +117,23 @@
 		text-align: center;
 		font-size: 1.3em;
 		border-radius: 50%;
-		box-shadow: 0px 5px 20px var(--black);
-		box-shadow: inset 0px 5px 180px var(--orange);
+		box-shadow: inset 0px 5px 280px var(--orange);
 		cursor: pointer;
-		opacity: 0;
-		animation: appear 2s linear 1s forwards;
+	}
+	.card-sm::after {
+		content: '';
+		width: 5px;
+		height: 5px;
+		background-color: #444444;
+		border-radius: 50%;
+		display: block;
+		position: absolute;
+		bottom: -50px;
+		z-index: -2;
+		transform: rotate3d(1, 0, 0, 80deg);
+		-webkit-box-shadow: 0px 0px 100px 2px #444444;
+		-moz-box-shadow: 0px 0px 8px 2px #444444;
+		box-shadow: 0px 0px 100px 100px #444444;
 	}
 
 	.card-container {
@@ -142,20 +143,13 @@
 		align-items: center;
 		justify-items: center;
 		align-items: center;
-		grid-gap: 3em;
+		grid-gap: 5em;
+		padding: 5em;
 	}
 	.center-text {
 		text-align: center;
 	}
 
-	@keyframes appear {
-		0% {
-			opacity: 0;
-		}
-		100% {
-			opacity: 1;
-		}
-	}
 	ul,
 	li {
 		padding: 5px;

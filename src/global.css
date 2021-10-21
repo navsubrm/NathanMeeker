@@ -6,6 +6,16 @@
 	--blue: rgb(151, 202, 239);
 	--light-blue: rgb(202, 250, 254);
 	--black: #222121;
+	--background-compatible-image: -webkit-gradient(
+			linear,
+			left top,
+			right top,
+			from(rgba(85, 188, 201, 0.3)),
+			to(rgba(63, 238, 230, 0.9))
+		),
+		url('/IMG_1521.jpeg');
+	--background-image: linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),
+		url('/IMG_1521.jpeg');
 }
 
 * {
@@ -16,18 +26,14 @@
 	color: #222121;
 }
 
-html {
-	height: 100%;
-}
-
-body {
-	display: grid;
-	grid: auto / 1fr;
-}
-
-footer {
-	margin-top: auto;
-	grid-column: 1/ -1;
+.container-border {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-content: center;
+	margin: 2em;
+	position: relative;
+	margin: 80px auto 80px auto;
 }
 
 .hidden {

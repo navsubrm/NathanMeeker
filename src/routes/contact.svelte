@@ -1,35 +1,38 @@
 <script>
 	import { page } from '$app/stores';
+	import { fly, fade } from 'svelte/transition';
 </script>
 
 <svelte:head>
 	<title>Nathan Meeker || Contact</title>
 </svelte:head>
 
-<div class="card-layout contact contact-btn" class:card-visible={$page.path === `/contact`}>
-	<div class="container-border">
-		<h1 class="card-title"><a href="/contact">Contact</a></h1>
-		<div id="contact-card" class="card-inner">
-			<form action="#" id="contact-form" class="form">
-				<label for="first-name">first name:</label>
-				<input id="first-name" type="text" size="50" placeholder="First Name" />
-				<label for="last-name">last name:</label>
-				<input id="last-name" type="text" size="50" placeholder="Last Name" />
-				<label for="email"
-					>email:
-					<span id="email-format" class="alert">entry is not a valid email address.</span></label
-				>
-				<input id="email" type="text" size="50" placeholder="Email" />
-				<label for="message">message:</label>
-				<textarea id="message" cols="50" rows="5" placeholder="Enter message here." />
-				<span id="message-success" class="alert "
-					>Thank you for reaching out to me! I will get back to you shortly.</span
-				>
-				<span id="message-fail" class="alert"
-					>Your message failed to send. Check the information and try again.</span
-				>
-				<button class="btn btn-main" type="submit" value="submit">send message</button>
-			</form>
+<div in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>
+	<div class="card-layout contact contact-btn" class:card-visible={$page.path === `/contact`}>
+		<div class="container-border">
+			<h1 class="card-title"><a href="/contact">Contact</a></h1>
+			<div id="contact-card" class="card-inner">
+				<form action="#" id="contact-form" class="form">
+					<label for="first-name">first name:</label>
+					<input id="first-name" type="text" size="50" placeholder="First Name" />
+					<label for="last-name">last name:</label>
+					<input id="last-name" type="text" size="50" placeholder="Last Name" />
+					<label for="email"
+						>email:
+						<span id="email-format" class="alert">entry is not a valid email address.</span></label
+					>
+					<input id="email" type="text" size="50" placeholder="Email" />
+					<label for="message">message:</label>
+					<textarea id="message" cols="50" rows="5" placeholder="Enter message here." />
+					<span id="message-success" class="alert "
+						>Thank you for reaching out to me! I will get back to you shortly.</span
+					>
+					<span id="message-fail" class="alert"
+						>Your message failed to send. Check the information and try again.</span
+					>
+					<button class="btn btn-main" type="submit" value="submit">send message</button>
+				</form>
+			</div>
 		</div>
 	</div>
 </div>

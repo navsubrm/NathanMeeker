@@ -33,8 +33,8 @@
 		animation: pictureReveal 1.5s linear 2s;
 		-webkit-animation-fill-mode: backwards;
 		animation-fill-mode: backwards;
-		-webkit-clip-path: polygon(0 0, 100% 0, 100% 79%, 0 100%);
-		clip-path: polygon(0 0, 100% 0, 100% 79%, 0 100%);
+		-webkit-clip-path: polygon(0 0, 100% 0, 100% 77%, 0 98%);
+		clip-path: polygon(0 0, 100% 0, 100% 77%, 0 98%);
 	}
 
 	.title-block {

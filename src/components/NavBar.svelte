@@ -1,25 +1,29 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-
-	$: if ($page.path !== '/')
-		document.documentElement.style.setProperty('--sub-container-diagonal', `0rad`);
 </script>
 
-<div class="title-container">
+<div>
 	<div class="nav">
 		<!-- Make the nav bar sticky to hold it at the top of the page.-->
 		<nav class="nav-menu">
 			<ul>
-				<li><a class="nav-link home-btn" href="/">home</a></li>
-				<li><a class="nav-link experience-btn" href="/experience">experience</a></li>
-				<li><a class="nav-link about-btn" href="/about">about</a></li>
-				<li><a class="nav-link contact-btn" href="/contact">contact</a></li>
+				<li class="nav-link" class:active={$page.path === `/`}><a href="/">home</a></li>
+				<li class="nav-link" class:active={$page.path === `/experience`}>
+					<a href="/experience">experience</a>
+				</li>
+				<li class="nav-link"><a href="/about" class:active={$page.path === `/about`}>about</a></li>
+				<li class="nav-link">
+					<a href="/contact" class:active={$page.path === `/contact`}>contact</a>
+				</li>
 			</ul>
 		</nav>
 	</div>
 </div>
 
 <style>
+	.active {
+		border-bottom: solid 1px black;
+	}
 	.nav {
 		position: absolute;
 		top: 0;
@@ -27,6 +31,7 @@
 		display: -webkit-box;
 		display: -ms-flexbox;
 		display: flex;
+		min-height: 70px;
 		z-index: 1;
 		background-color: white;
 	}
@@ -63,7 +68,6 @@
 
 	.nav-link {
 		padding: 5px 7px;
-		border-radius: 0.7em;
 		border: transparent 2px #222121;
 		color: #222121;
 		-webkit-transition: border 0.5s;
@@ -74,6 +78,7 @@
 
 	.nav-link:hover {
 		border: solid 2px;
+		border-radius: 0.25em;
 		color: #222121;
 		cursor: pointer;
 	}

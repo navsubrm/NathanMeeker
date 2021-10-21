@@ -1,18 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { fly, fade } from 'svelte/transition';
 </script>
 
 <svelte:head>
 	<title>Nathan Meeker || About</title>
 </svelte:head>
 
-<div
-	class="card-layout experience experience-btn"
-	class:card-visible={$page.path === `/experience`}
->
+<div in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>
 	<div class="container-border">
-		<h1 class="card-title"><a href="/experience">Experience</a></h1>
-		<div id="experience-card" class="card-inner">
+		<h1 class="card-title">About</h1>
+		<div id="about-card" class="card-inner">
 			<div class="center">
 				<p>
 					I am a 24 year Navy veteran with a passion for finding and applying data-driven solutions

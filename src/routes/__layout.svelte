@@ -8,14 +8,9 @@
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" />
 </svelte:head>
 
-<div class="full-container">
-	<NavBar />
-	<slot />
-	<FooterBar />
-</div>
+<NavBar />
+<slot />
+<FooterBar />
 
 <style>
-	.full-container {
-		min-height: 100vh;
-	}
 </style>
