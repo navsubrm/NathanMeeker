@@ -2,22 +2,20 @@
 	import { page } from '$app/stores';
 </script>
 
-<div>
-	<div class="nav">
-		<!-- Make the nav bar sticky to hold it at the top of the page.-->
-		<nav class="nav-menu">
-			<ul>
-				<li class="nav-link" class:active={$page.path === `/`}><a href="/">home</a></li>
-				<li class="nav-link" class:active={$page.path === `/experience`}>
-					<a href="/experience">experience</a>
-				</li>
-				<li class="nav-link"><a href="/about" class:active={$page.path === `/about`}>about</a></li>
-				<li class="nav-link">
-					<a href="/contact" class:active={$page.path === `/contact`}>contact</a>
-				</li>
-			</ul>
-		</nav>
-	</div>
+<div class="nav">
+	<!-- Make the nav bar sticky to hold it at the top of the page.-->
+	<nav class="nav-menu">
+		<ul>
+			<li class="nav-link" class:active={$page.path === `/`}><a href="/">home</a></li>
+			<li class="nav-link" class:active={$page.path === `/experience`}>
+				<a href="/experience">experience</a>
+			</li>
+			<li class="nav-link"><a href="/about" class:active={$page.path === `/about`}>about</a></li>
+			<li class="nav-link">
+				<a href="/contact" class:active={$page.path === `/contact`}>contact</a>
+			</li>
+		</ul>
+	</nav>
 </div>
 
 <style>
@@ -25,14 +23,14 @@
 		border-bottom: solid 1px black;
 	}
 	.nav {
-		position: absolute;
+		position: sticky;
 		top: 0;
 		width: 100%;
 		display: -webkit-box;
 		display: -ms-flexbox;
 		display: flex;
-		min-height: 70px;
-		z-index: 1;
+		min-height: 5vh;
+		z-index: 10;
 		background-color: white;
 	}
 
@@ -55,7 +53,7 @@
 		-webkit-box-direction: normal;
 		-ms-flex-direction: row;
 		flex-direction: row;
-		margin: 10px 20px;
+		margin: 5px 20px;
 		-ms-flex-wrap: wrap;
 		flex-wrap: wrap;
 		-ms-flex-line-pack: space-evenly;
@@ -64,6 +62,8 @@
 
 	.nav-menu a {
 		text-decoration: none;
+		font-weight: 700;
+		text-transform: uppercase;
 	}
 
 	.nav-link {

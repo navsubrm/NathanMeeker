@@ -11,12 +11,14 @@
 
 <style>
 	.title-bar {
-		position: relative;
-		margin-top: 70px;
+		position: sticky;
+		top: 5vh;
+		margin-top: 30px;
 		display: flex;
 		justify-content: center;
 		align-content: center;
-		height: 20vh;
+		height: 15vh;
+		z-index: 1;
 	}
 	.header {
 		margin-top: 0px;
@@ -27,10 +29,20 @@
 		width: fit-content;
 	}
 	h1 {
-		font-size: 5em;
+		font-size: 8vmax;
 		font-family: Roboto, Helvetica, sans-serif;
 		font-weight: 700;
 		color: white;
 		text-transform: uppercase;
+	}
+
+	@media only screen and (max-width: 600px) {
+		.title-bar {
+			top: 7vh;
+		}
+		h1 {
+			font-size: 3em;
+			text-align: center;
+		}
 	}
 </style>

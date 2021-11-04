@@ -6,6 +6,7 @@
 	--blue: rgb(151, 202, 239);
 	--light-blue: rgb(202, 250, 254);
 	--black: #222121;
+	--experience-text: rgba(74, 47, 4, 0.9);
 	--background-compatible-image: -webkit-gradient(
 			linear,
 			left top,
@@ -24,12 +25,6 @@
 	display: border-box;
 	font-family: 'Roboto';
 	color: #222121;
-}
-
-.container-border {
-	position: relative;
-	margin: 40px auto 40px auto;
-	min-height: 90vh;
 }
 
 .hidden {
@@ -71,6 +66,7 @@
 	transform: translateY(-3px);
 	-webkit-box-shadow: 5px 5px 15px;
 	box-shadow: 5px 5px 15px;
+	cursor: pointer;
 }
 
 .btn:active {
@@ -94,10 +90,10 @@
 	width: -webkit-fit-content;
 	width: -moz-fit-content;
 	width: fit-content;
-	border-radius: 0.2em;
+	border-radius: 0.5em;
+	background-color: white;
 	margin: 20px;
-	font-size: 1.5vmax;
-	background-color: #97caef;
+	font-size: 1.2em;
 	text-transform: uppercase;
 	-webkit-animation-fill-mode: backwards;
 	animation-fill-mode: backwards;

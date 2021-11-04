@@ -9,8 +9,14 @@
 </svelte:head>
 
 <NavBar />
-<slot />
+<div class="layout-container">
+	<slot />
+</div>
 <FooterBar />
 
 <style>
+	.layout-container {
+		min-height: 90vh;
+		width: 100%;
+	}
 </style>

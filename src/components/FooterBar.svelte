@@ -29,8 +29,8 @@
 		display: -webkit-box;
 		display: -ms-flexbox;
 		display: flex;
-		height: 5vh;
-		margin-top: auto;
+		min-height: 5vh;
+		margin-top: 0 auto;
 	}
 
 	.footer-left,
