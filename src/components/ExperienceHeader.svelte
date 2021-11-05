@@ -10,7 +10,7 @@
 		<div class="card-container">
 			<div class="one">
 				<!-- This is a component load for the globe animations -->
-				<GlobeText totalTitleLetters={7} spread={50} route={'/experience/general'}>
+				<GlobeText totalTitleLetters={7} spread={50} route={'#general'}>
 					<span slot="title">
 						<!--  Note the span with slot name It identifies which slot -->
 						<span style="--rot-posit:-3;">g</span>

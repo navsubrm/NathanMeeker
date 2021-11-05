@@ -1,5 +1,5 @@
 <script>
-	import SubPageTitleBar from '../../components/SubPageTitleBar.svelte';
+	import SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';
 
 	const scrollTop = () => window.scrollTo(0, 0);
 </script>

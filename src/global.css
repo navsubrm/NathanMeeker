@@ -102,3 +102,6 @@
 .btn-nav {
 	padding: 5px 15px;
 }
+.btn-center {
+	justify-content: center;
+}
