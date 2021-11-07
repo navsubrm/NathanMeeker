@@ -1,5 +1,5 @@
 <script>
-	import ExperienceHeader from '../../components/ExperienceHeader.svelte';
+	import ExperienceHeader from './experienceComponents/ExperienceHeader.svelte';
 </script>
 
 <ExperienceHeader />

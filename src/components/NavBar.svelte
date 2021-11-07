@@ -29,7 +29,7 @@
 		display: -webkit-box;
 		display: -ms-flexbox;
 		display: flex;
-		min-height: 5vh;
+		height: 7vh;
 		z-index: 10;
 		background-color: white;
 	}
@@ -110,7 +110,7 @@
 			justify-content: space-evenly;
 			-ms-flex-wrap: wrap;
 			flex-wrap: wrap;
-			margin: 10px 0px;
+			margin: 5px 0px;
 		}
 	}
 

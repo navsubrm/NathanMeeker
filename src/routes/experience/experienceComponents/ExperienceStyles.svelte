@@ -1,0 +1,97 @@
+<script>
+	const scrollTop = () => window.scrollTo(0, 0);
+</script>
+
+<div class="container">
+	<slot name="image">
+		<div class="image default-image">No content</div>
+	</slot>
+
+	<div class="content">
+		<slot name="content">
+			<div class="content">nothing to show</div>
+		</slot>
+	</div>
+	<button class="btn btn-main btn-center scroll-btn" on:click={scrollTop}>Scroll Top</button>
+</div>
+
+<!-- Update the global style items tomorrow because the current system acting as global css.-->
+<style>
+	.container {
+		position: relative;
+		display: grid;
+		place-items: center;
+		grid-template-areas:
+			'text text image'
+			'. scroll-btn .';
+		min-height: 70vh;
+		margin: 20px auto 0px auto;
+		padding: 2em;
+	}
+	.scroll-btn {
+		grid-area: scroll-btn;
+	}
+
+	:global(.image) {
+		grid-area: image;
+		height: 25vmax;
+		width: 40vmax;
+		margin: 20px;
+		border-radius: 0.9em;
+		box-shadow: inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text);
+		background-position: center;
+	}
+
+	.default-image {
+		background: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)), no-repeat;
+	}
+
+	.content {
+		grid-area: text;
+		width: clamp(400px, 100%, 900px);
+		font-size: 1.5em;
+		padding: 10px;
+	}
+	:global(.experience-p),
+	:global(.experience-strong),
+	:global(.experience-a),
+	:global(.experience-li) {
+		margin: 40px auto 40px auto;
+		color: var(--experience-text);
+	}
+	:global(.experience-h2) {
+		font-size: 1.3em;
+	}
+
+	:global(.experience-p),
+	:global(.experience-strong) {
+		line-height: 2em;
+	}
+
+	@media only screen and (max-width: 1500px) {
+		.container {
+			grid-template-areas:
+				'image'
+				'text'
+				'scroll-btn';
+			padding: 5px;
+		}
+		:global(.image) {
+			height: 50vmax;
+			width: 90vmax;
+		}
+		.content {
+			width: 90%;
+		}
+	}
+
+	@media only screen and (max-width: 850px) {
+		:global(.image) {
+			height: 25vmax;
+			width: 50vmax;
+		}
+		:global(.image) > :global(p) {
+			font-size: 2em;
+		}
+	}
+</style>

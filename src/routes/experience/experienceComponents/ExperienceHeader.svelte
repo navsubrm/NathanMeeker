@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { fly, fade } from 'svelte/transition';
-	import SubPageTitleBar from './SubPageTitleBar.svelte';
+	import SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';
 	import GlobeText from './GlobeText.svelte';
 </script>
 
 <div in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>
-	<SubPageTitleBar title={'experience'} colorVar={'rgb(238, 174, 37)'} />
+	<SubPageTitleBar title={'experience'} colorVar={'white'} textColor={'rgb(238, 174, 37)'} />
 	<div class="container-border">
 		<div class="card-container">
 			<div class="one">
@@ -25,15 +25,14 @@
 				<!-- End of the first globe animation -->
 			</div>
 			<div class="two">
-				<GlobeText totalTitleLetters={18} spread={120} route={'/'}>
+				<!--  The route should mirror the div ID that you want the scroll to go to in globeText -->
+				<GlobeText totalTitleLetters={14} spread={110} route={'#network-security'}>
 					<span slot="title">
-						<span style="--rot-posit:-8;">n</span>
-						<span style="--rot-posit:-7;">e</span>
-						<span style="--rot-posit:-6;">t</span>
-						<span style="--rot-posit:-5;">w</span>
-						<span style="--rot-posit:-4;">o</span>
-						<span style="--rot-posit:-3;">r</span>
-						<span style="--rot-posit:-2;">k</span>
+						<span style="--rot-posit:-6;">c</span>
+						<span style="--rot-posit:-5;">y</span>
+						<span style="--rot-posit:-4;">b</span>
+						<span style="--rot-posit:-3;">e</span>
+						<span style="--rot-posit:-2;">r</span>
 						<span style="--rot-posit:-1;" />
 						<span style="--rot-posit:0;">s</span>
 						<span style="--rot-posit:1;">e</span>
@@ -44,23 +43,10 @@
 						<span style="--rot-posit:6;">t</span>
 						<span style="--rot-posit:7;">y</span>
 					</span>
-					<span slot="sub-items">
-						<div>
-							<strong
-								>Information Systems Security Manager / Network administrator 10+ years:</strong
-							>
-							<ul>
-								<li>COMPTIA Security+ certified 7+ years.</li>
-								<li>MS SharePoint Administrator 5+ years.</li>
-								<li>MS SharePoint development 2+ years.</li>
-								<li>Proficient with HTML, CSS, JavaScript, and React.</li>
-							</ul>
-						</div>
-					</span>
 				</GlobeText>
 			</div>
 			<div class="three">
-				<GlobeText totalTitleLetters={15} spread={100} route={'/'}>
+				<GlobeText totalTitleLetters={15} spread={100} route={'#web-development'}>
 					<span slot="title">
 						<span style="--rot-posit:-7;">w</span>
 						<span style="--rot-posit:-6;">e</span>
@@ -78,20 +64,10 @@
 						<span style="--rot-posit:6;">n</span>
 						<span style="--rot-posit:7;">t</span>
 					</span>
-					<span slot="sub-items">
-						<div>
-							<ul>
-								<li>COMPTIA Security+ certified 7+ years.</li>
-								<li>MS SharePoint Administrator 5+ years.</li>
-								<li>MS SharePoint development 2+ years.</li>
-								<li>Proficient with HTML, CSS, JavaScript, and React.</li>
-							</ul>
-						</div>
-					</span>
 				</GlobeText>
 			</div>
 			<div class="four">
-				<GlobeText totalTitleLetters={19} spread={120} route={'/'}>
+				<GlobeText totalTitleLetters={19} spread={120} route={'#security-management'}>
 					<span slot="title">
 						<span style="--rot-posit:-9;">s</span>
 						<span style="--rot-posit:-8;">e</span>
@@ -113,34 +89,10 @@
 						<span style="--rot-posit:8;">n</span>
 						<span style="--rot-posit:9;">t</span>
 					</span>
-					<span slot="sub-items">
-						<div>
-							<strong>Personnel Security Management 10+ years:</strong>
-							<ul>
-								<li>DoD Security Professional Education and Development (SPeD) Certifications:</li>
-								<li>General Security Administration 21+ years.</li>
-								<li>Command Security Manager 15+ years.</li>
-								<li>
-									<a
-										title="Center for Security Excellence SFPC certification webpage."
-										href="https://www.cdse.edu/certification/sfpc.html"
-										>Security Professional Fundamentals (SFPC) 3+ years.</a
-									>
-								</li>
-								<li>
-									<a
-										title="Center for Security Excellence PSC certification webpage."
-										href="https://www.cdse.edu/certification/psc.html"
-										>Physical Security Certification (PSC) 3+ years.</a
-									>
-								</li>
-							</ul>
-						</div>
-					</span>
 				</GlobeText>
 			</div>
 			<div class="five">
-				<GlobeText totalTitleLetters={9} spread={60} route={'/'}>
+				<GlobeText totalTitleLetters={9} spread={60} route={'#education'}>
 					<span slot="title">
 						<span style="--rot-posit:-5;">c</span>
 						<span style="--rot-posit:-4;">r</span>
@@ -153,17 +105,6 @@
 						<span style="--rot-posit:3;">a</span>
 						<span style="--rot-posit:4;">l</span>
 						<span style="--rot-posit:5;">s</span>
-					</span>
-					<span slot="sub-items">
-						<div>
-							<strong
-								>Bachelor's degree in Business Administration from Excelsior College. (2015).</strong
-							>
-							<strong
-								>12 semester hours from completing an MBA with emphasis in technology management.</strong
-							>
-							<strong>Sigma Beta Delta National Honor Society for Business (2019).</strong>
-						</div>
 					</span>
 				</GlobeText>
 			</div>

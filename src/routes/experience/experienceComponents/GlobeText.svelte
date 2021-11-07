@@ -6,6 +6,7 @@
 	export let spread: number;
 	export let route: string;
 
+	// Updates the central degree for text 360deg rotation.
 	const updateDeg = () => {
 		rotationSpeed = setInterval(() => {
 			if (deg < 360) return (deg += 1);
@@ -13,6 +14,7 @@
 		}, 1);
 	};
 
+	//focuses the globe
 	const unmute = () => {
 		if (!globe.classList.contains('muted')) return;
 		globe.classList.remove('muted');
@@ -20,6 +22,7 @@
 		updateDeg();
 	};
 
+	//Removes focus from the globe
 	const mute = () => {
 		if (globe.classList.contains('muted')) return;
 		globe.classList.add('muted');
