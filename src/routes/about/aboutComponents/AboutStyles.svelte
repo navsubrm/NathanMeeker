@@ -1,5 +1,7 @@
 <script>
-	const scrollTop = () => window.scrollTo(0, 0);
+	const scrollTop = () => {
+		window.scrollTo(0, 0);
+	};
 </script>
 
 <div class="container">

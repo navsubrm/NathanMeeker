@@ -16,9 +16,4 @@
 </div>
 
 <style>
-	.local-image {
-		background: linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),
-			url('/FS0A5054.png') no-repeat;
-		background-size: cover;
-	}
 </style>

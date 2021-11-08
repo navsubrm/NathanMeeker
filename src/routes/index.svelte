@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { watchResize } from '../../node_modules/svelte-watch-resize';
+	import { onMount } from 'svelte';
 	import { fly, fade } from 'svelte/transition';
 
+	let textAngle;
+
+	onMount(() => adjustText(textAngle));
 	const adjustText = (node: any) => {
 		const sideA = node.clientHeight; //Height
 		const sideB = node.clientWidth; //Width
@@ -15,10 +18,11 @@
 	<title>Nathan Meeker || Home</title>
 </svelte:head>
 
-<svelte:body
-	on:click={(e) => {
-		console.log(e.target);
-	}} />
+<svelte:window
+	on:resize={() => {
+		adjustText(textAngle);
+	}}
+/>
 
 <div class="main-container" in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>
 	<div class="title">
@@ -27,13 +31,12 @@
 				<div class="title-block">
 					<span class="title-main gradient-text">Nathan Meeker</span>
 					<span class="title-secondary gradient-text">Come See the Whole Picture</span>
-					<!--<a href="#" tabindex="4" class="btn btn-main"> Contact me </a>-->
 				</div>
 			</div>
 		</div>
 	</div>
-	<div id="card-container" class="card card-container" use:watchResize={adjustText}>
-		<div class="card-layout experience experience-btn">
+	<div id="card-container" class="card card-container">
+		<div class="card-layout experience experience-btn" bind:this={textAngle}>
 			<h1 class="card-title"><a href="/experience">Experience</a></h1>
 		</div>
 		<div class="card-layout about about-btn">
