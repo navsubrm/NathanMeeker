@@ -1,5 +1,6 @@
 import preprocess from 'svelte-preprocess';
 import netlify from '@sveltejs/adapter-netlify';
+const dev = process.env.NODE_ENV === 'development';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -10,7 +11,12 @@ const config = {
 	kit: {
 		// hydrate the <div id="svelte"> element in src/app.html
 		target: '#svelte',
-		adapter: netlify()
+		adapter: netlify(),
+		vite: {
+			ssr: {
+				noExternal: dev ? [] : ['@supabase/supabase-js']
+			}
+		}
 	}
 };
 
