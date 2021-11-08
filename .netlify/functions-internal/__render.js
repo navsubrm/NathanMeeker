@@ -66,13 +66,13 @@ function dataUriToBuffer(uri) {
   return buffer;
 }
 async function* toIterator(parts, clone2 = true) {
-  for (let part of parts) {
+  for (const part of parts) {
     if ("stream" in part) {
       yield* part.stream();
     } else if (ArrayBuffer.isView(part)) {
       if (clone2) {
         let position = part.byteOffset;
-        let end = part.byteOffset + part.byteLength;
+        const end = part.byteOffset + part.byteLength;
         while (position !== end) {
           const size = Math.min(end - position, POOL_SIZE);
           const chunk = part.buffer.slice(position, position + size);
@@ -179,9 +179,9 @@ async function consumeBody(data) {
   }
 }
 function fromRawHeaders(headers = []) {
-  return new Headers(headers.reduce((result, value, index2, array) => {
-    if (index2 % 2 === 0) {
-      result.push(array.slice(index2, index2 + 2));
+  return new Headers(headers.reduce((result, value, index, array) => {
+    if (index % 2 === 0) {
+      result.push(array.slice(index, index + 2));
     }
     return result;
   }, []).filter(([name, value]) => {
@@ -3968,7 +3968,17 @@ var init_install_fetch = __esm({
     POOL_SIZE$1 = 65536;
     if (!globalThis.ReadableStream) {
       try {
-        Object.assign(globalThis, require("stream/web"));
+        const process2 = require("node:process");
+        const { emitWarning } = process2;
+        try {
+          process2.emitWarning = () => {
+          };
+          Object.assign(globalThis, require("node:stream/web"));
+          process2.emitWarning = emitWarning;
+        } catch (error2) {
+          process2.emitWarning = emitWarning;
+          throw error2;
+        }
       } catch (error2) {
         Object.assign(globalThis, ponyfill_es2018.exports);
       }
@@ -4001,8 +4011,19 @@ var init_install_fetch = __esm({
       #type = "";
       #size = 0;
       constructor(blobParts = [], options2 = {}) {
-        let size = 0;
-        const parts = blobParts.map((element) => {
+        if (typeof blobParts !== "object" || blobParts === null) {
+          throw new TypeError("Failed to construct 'Blob': The provided value cannot be converted to a sequence.");
+        }
+        if (typeof blobParts[Symbol.iterator] !== "function") {
+          throw new TypeError("Failed to construct 'Blob': The object must have a callable @@iterator property.");
+        }
+        if (typeof options2 !== "object" && typeof options2 !== "function") {
+          throw new TypeError("Failed to construct 'Blob': parameter 2 cannot convert to dictionary.");
+        }
+        if (options2 === null)
+          options2 = {};
+        const encoder = new TextEncoder();
+        for (const element of blobParts) {
           let part;
           if (ArrayBuffer.isView(element)) {
             part = new Uint8Array(element.buffer.slice(element.byteOffset, element.byteOffset + element.byteLength));
@@ -4011,15 +4032,13 @@ var init_install_fetch = __esm({
           } else if (element instanceof Blob) {
             part = element;
           } else {
-            part = new TextEncoder().encode(element);
+            part = encoder.encode(element);
           }
-          size += ArrayBuffer.isView(part) ? part.byteLength : part.size;
-          return part;
-        });
+          this.#size += ArrayBuffer.isView(part) ? part.byteLength : part.size;
+          this.#parts.push(part);
+        }
         const type = options2.type === void 0 ? "" : String(options2.type);
-        this.#type = /[^\u0020-\u007E]/.test(type) ? "" : type;
-        this.#size = size;
-        this.#parts = parts;
+        this.#type = /^[\x20-\x7E]*$/.test(type) ? type : "";
       }
       get size() {
         return this.#size;
@@ -4030,7 +4049,7 @@ var init_install_fetch = __esm({
       async text() {
         const decoder = new TextDecoder();
         let str = "";
-        for await (let part of toIterator(this.#parts, false)) {
+        for await (const part of toIterator(this.#parts, false)) {
           str += decoder.decode(part, { stream: true });
         }
         str += decoder.decode();
@@ -4047,11 +4066,14 @@ var init_install_fetch = __esm({
       }
       stream() {
         const it = toIterator(this.#parts, true);
-        return new ReadableStream({
+        return new globalThis.ReadableStream({
           type: "bytes",
           async pull(ctrl) {
             const chunk = await it.next();
             chunk.done ? ctrl.close() : ctrl.enqueue(chunk.value);
+          },
+          async cancel() {
+            await it.return();
           }
         });
       }
@@ -4080,6 +4102,7 @@ var init_install_fetch = __esm({
               chunk = part.slice(relativeStart, Math.min(size2, relativeEnd));
               added += chunk.size;
             }
+            relativeEnd -= size2;
             blobParts.push(chunk);
             relativeStart = 0;
           }
@@ -4673,6 +4696,667 @@ var init_install_fetch = __esm({
 var init_shims = __esm({
   "node_modules/@sveltejs/adapter-netlify/files/shims.js"() {
     init_install_fetch();
+  }
+});
+
+// .svelte-kit/output/server/chunks/__layout-a4ca176e.js
+var layout_a4ca176e_exports = {};
+__export(layout_a4ca176e_exports, {
+  default: () => _layout
+});
+var getStores, page, css$2, NavBar, css$1, FooterBar, css, _layout;
+var init_layout_a4ca176e = __esm({
+  ".svelte-kit/output/server/chunks/__layout-a4ca176e.js"() {
+    init_shims();
+    init_app_5398027c();
+    getStores = () => {
+      const stores = getContext("__svelte__");
+      return {
+        page: {
+          subscribe: stores.page.subscribe
+        },
+        navigating: {
+          subscribe: stores.navigating.subscribe
+        },
+        get preloading() {
+          console.error("stores.preloading is deprecated; use stores.navigating instead");
+          return {
+            subscribe: stores.navigating.subscribe
+          };
+        },
+        session: stores.session
+      };
+    };
+    page = {
+      subscribe(fn) {
+        const store = getStores().page;
+        return store.subscribe(fn);
+      }
+    };
+    css$2 = {
+      code: ".active.svelte-1pfdhft.svelte-1pfdhft{border-bottom:solid 1px black}.nav.svelte-1pfdhft.svelte-1pfdhft{position:sticky;top:0;width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;height:7vh;z-index:10;background-color:white}.nav-menu.svelte-1pfdhft.svelte-1pfdhft{display:-webkit-box;display:-ms-flexbox;display:flex;width:100%;-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end}.nav-menu.svelte-1pfdhft ul.svelte-1pfdhft,.nav-menu.svelte-1pfdhft li.svelte-1pfdhft{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;margin:5px 20px;-ms-flex-wrap:wrap;flex-wrap:wrap;-ms-flex-line-pack:space-evenly;align-content:space-evenly}.nav-menu.svelte-1pfdhft a.svelte-1pfdhft{text-decoration:none;font-weight:700;text-transform:uppercase}.nav-link.svelte-1pfdhft.svelte-1pfdhft{padding:5px 7px;border:transparent 2px #222121;color:#222121;-webkit-transition:border 0.5s;transition:border 0.5s;-webkit-transition:color 0.5s;transition:color 0.5s}.nav-link.svelte-1pfdhft.svelte-1pfdhft:hover{border:solid 2px;border-radius:0.25em;color:#222121;cursor:pointer}.nav-link.svelte-1pfdhft.svelte-1pfdhft:active{background-color:#cafafe}.nav-link.svelte-1pfdhft.svelte-1pfdhft:focus{border:solid;outline:none}.nav-link.svelte-1pfdhft.svelte-1pfdhft:inner-focus{outline:none}@media only screen and (max-width: 600px){.nav-menu.svelte-1pfdhft.svelte-1pfdhft{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center}}@media only screen and (max-width: 400px){.nav.svelte-1pfdhft ul li.svelte-1pfdhft{-webkit-box-pack:space-evenly;-ms-flex-pack:space-evenly;justify-content:space-evenly;-ms-flex-wrap:wrap;flex-wrap:wrap;margin:5px 0px}}@media only screen and (max-width: 600px){.nav.svelte-1pfdhft ul li.svelte-1pfdhft{margin:10px 0px}}",
+      map: null
+    };
+    NavBar = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      let $page, $$unsubscribe_page;
+      $$unsubscribe_page = subscribe(page, (value) => $page = value);
+      $$result.css.add(css$2);
+      $$unsubscribe_page();
+      return `<div class="${"nav svelte-1pfdhft"}">
+	<nav class="${"nav-menu svelte-1pfdhft"}"><ul class="${"svelte-1pfdhft"}"><li class="${["nav-link svelte-1pfdhft", $page.path === `/` ? "active" : ""].join(" ").trim()}"><a href="${"/"}" class="${"svelte-1pfdhft"}">home</a></li>
+			<li class="${["nav-link svelte-1pfdhft", $page.path === `/experience` ? "active" : ""].join(" ").trim()}"><a href="${"/experience"}" class="${"svelte-1pfdhft"}">experience</a></li>
+			<li class="${"nav-link svelte-1pfdhft"}"><a href="${"/about"}" class="${["svelte-1pfdhft", $page.path === `/about` ? "active" : ""].join(" ").trim()}">about</a></li>
+			<li class="${"nav-link svelte-1pfdhft"}"><a href="${"/contact"}" class="${["svelte-1pfdhft", $page.path === `/contact` ? "active" : ""].join(" ").trim()}">contact</a></li></ul></nav>
+</div>`;
+    });
+    css$1 = {
+      code: "footer.svelte-1qq6957.svelte-1qq6957{bottom:0;position:relative;display:-webkit-box;display:-ms-flexbox;display:flex;min-height:5vh;margin-top:0 auto}.footer-left.svelte-1qq6957.svelte-1qq6957,.footer-right.svelte-1qq6957.svelte-1qq6957{position:relative;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;width:50%;background-color:#55bcc9}.footer-left.svelte-1qq6957 p.svelte-1qq6957,.footer-right.svelte-1qq6957 p.svelte-1qq6957{text-align:center}.footer-right-content.svelte-1qq6957.svelte-1qq6957{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-pack:space-evenly;-ms-flex-pack:space-evenly;justify-content:space-evenly;-webkit-box-align:center;-ms-flex-align:center;align-items:center}.footer-right.svelte-1qq6957 img.svelte-1qq6957{height:40px;padding:10px;cursor:pointer}",
+      map: null
+    };
+    FooterBar = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css$1);
+      return `<footer class="${"footer svelte-1qq6957"}"><div class="${"footer-left svelte-1qq6957"}"><div class="${"footer-left-content"}"><p class="${"svelte-1qq6957"}">Nathan Meeker, SFPC/PSC/Security+,</p></div></div>
+	<div class="${"footer-right svelte-1qq6957"}"><div class="${"footer-right-content svelte-1qq6957"}"><p class="${"svelte-1qq6957"}">Look me up on:</p>
+			<a title="${"LinkedIn profile for Nathan Meeker."}" href="${"https://www.linkedin.com/in/nathan-m-444055178/"}"><img src="${"/iconfinder_social-linkedin-circle_771370.png"}" alt="${"LinkedIn Icon"}" class="${"svelte-1qq6957"}"></a>
+			<a title="${"Portfolium profile for Nathan Meeker."}" href="${"https://portfolium.com/NathanMeeker2"}"><img src="${"/portfoliumIcon.png"}" alt="${"Portfolium Icon"}" class="${"svelte-1qq6957"}"></a></div></div>
+</footer>`;
+    });
+    css = {
+      code: ".layout-container.svelte-1j2vmps{min-height:90vh;width:100%}",
+      map: null
+    };
+    _layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css);
+      return `${$$result.head += `<link href="${"https://fonts.googleapis.com/css?family=Roboto"}" rel="${"stylesheet"}" data-svelte="svelte-us18fz">`, ""}
+
+${validate_component(NavBar, "NavBar").$$render($$result, {}, {}, {})}
+<div class="${"layout-container svelte-1j2vmps"}">${slots.default ? slots.default({}) : ``}</div>
+${validate_component(FooterBar, "FooterBar").$$render($$result, {}, {}, {})}`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/error-64b6bbd0.js
+var error_64b6bbd0_exports = {};
+__export(error_64b6bbd0_exports, {
+  default: () => Error2,
+  load: () => load
+});
+function load({ error: error2, status }) {
+  return { props: { error: error2, status } };
+}
+var Error2;
+var init_error_64b6bbd0 = __esm({
+  ".svelte-kit/output/server/chunks/error-64b6bbd0.js"() {
+    init_shims();
+    init_app_5398027c();
+    Error2 = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      let { status } = $$props;
+      let { error: error2 } = $$props;
+      if ($$props.status === void 0 && $$bindings.status && status !== void 0)
+        $$bindings.status(status);
+      if ($$props.error === void 0 && $$bindings.error && error2 !== void 0)
+        $$bindings.error(error2);
+      return `<h1>${escape(status)}</h1>
+
+<pre>${escape(error2.message)}</pre>
+
+
+
+${error2.frame ? `<pre>${escape(error2.frame)}</pre>` : ``}
+${error2.stack ? `<pre>${escape(error2.stack)}</pre>` : ``}`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/index-8b7cd299.js
+var index_8b7cd299_exports = {};
+__export(index_8b7cd299_exports, {
+  default: () => Routes
+});
+var css2, Routes;
+var init_index_8b7cd299 = __esm({
+  ".svelte-kit/output/server/chunks/index-8b7cd299.js"() {
+    init_shims();
+    init_app_5398027c();
+    css2 = {
+      code: ".main-container.svelte-1ah978p.svelte-1ah978p{position:relative}.title.svelte-1ah978p.svelte-1ah978p{position:relative;height:95vh;background-image:-webkit-gradient(\n				linear,\n				left top,\n				right top,\n				from(rgba(85, 188, 201, 0.3)),\n				to(rgba(63, 238, 230, 0.9))\n			),\n			url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\n			url('/IMG_1521.jpeg');background-repeat:no-repeat;background-size:cover;-webkit-animation:svelte-1ah978p-pictureReveal 1.5s linear 2s;animation:svelte-1ah978p-pictureReveal 1.5s linear 2s;-webkit-animation-fill-mode:backwards;animation-fill-mode:backwards;-webkit-clip-path:polygon(0 0, 100% 0, 100% 77%, 0 98%);clip-path:polygon(0 0, 100% 0, 100% 77%, 0 98%)}.title-block.svelte-1ah978p.svelte-1ah978p{position:absolute;top:40%;left:50%;width:100%;-webkit-transform:translate(-50%, -50%);transform:translate(-50%, -50%);text-align:center}.title-main.svelte-1ah978p.svelte-1ah978p{background-color:#1f2b62;background-image:linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);background-repeat:no-repeat;background-size:100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-transform:uppercase;display:block;font-size:8vmax;-webkit-animation:svelte-1ah978p-titleSwoop 1.5s linear;animation:svelte-1ah978p-titleSwoop 1.5s linear}.title-secondary.svelte-1ah978p.svelte-1ah978p{background-color:#1f2b62;background-image:linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);background-repeat:no-repeat;background-size:100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-transform:uppercase;display:block;line-height:1.5rem;letter-spacing:0.65rem;font-size:1.5vmax;margin-bottom:40px;text-align:center;-webkit-animation:svelte-1ah978p-subTitleSwoop 1.5s linear 3s;animation:svelte-1ah978p-subTitleSwoop 1.5s linear 3s;-webkit-animation-fill-mode:backwards;animation-fill-mode:backwards}@-webkit-keyframes svelte-1ah978p-pictureReveal{0%{background-image:-webkit-gradient(linear, left top, right top, from(#55bcc9), to(#3feee6)),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, #55bcc9, #3feee6), url('/IMG_1521.jpeg')}25%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.8)),\n					to(rgba(63, 238, 230, 0.97))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.8), rgba(63, 238, 230, 0.97)),\n				url('/IMG_1521.jpeg')}50%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.6)),\n					to(rgba(63, 238, 230, 0.95))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.6), rgba(63, 238, 230, 0.95)),\n				url('/IMG_1521.jpeg')}75%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.4)),\n					to(rgba(63, 238, 230, 0.93))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.4), rgba(63, 238, 230, 0.93)),\n				url('/IMG_1521.jpeg')}100%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.3)),\n					to(rgba(63, 238, 230, 0.9))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\n				url('/IMG_1521.jpeg')}}@keyframes svelte-1ah978p-pictureReveal{0%{background-image:-webkit-gradient(linear, left top, right top, from(#55bcc9), to(#3feee6)),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, #55bcc9, #3feee6), url('/IMG_1521.jpeg')}25%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.8)),\n					to(rgba(63, 238, 230, 0.97))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.8), rgba(63, 238, 230, 0.97)),\n				url('/IMG_1521.jpeg')}50%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.6)),\n					to(rgba(63, 238, 230, 0.95))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.6), rgba(63, 238, 230, 0.95)),\n				url('/IMG_1521.jpeg')}75%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.4)),\n					to(rgba(63, 238, 230, 0.93))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.4), rgba(63, 238, 230, 0.93)),\n				url('/IMG_1521.jpeg')}100%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.3)),\n					to(rgba(63, 238, 230, 0.9))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\n				url('/IMG_1521.jpeg')}}@-webkit-keyframes svelte-1ah978p-titleSwoop{0%{width:100vw;letter-spacing:3rem;opacity:0}100%{width:100vw;letter-spacing:2px;opacity:1}}@keyframes svelte-1ah978p-titleSwoop{0%{width:100vw;letter-spacing:3rem;opacity:0}100%{width:100vw;letter-spacing:2px;opacity:1}}@-webkit-keyframes svelte-1ah978p-subTitleSwoop{0%{-webkit-transform:translateY(-60px);transform:translateY(-60px);opacity:0}100%{-webkit-transform:translateY(0px);transform:translateY(0px);opacity:1}}@keyframes svelte-1ah978p-subTitleSwoop{0%{-webkit-transform:translateY(-60px);transform:translateY(-60px);opacity:0}100%{-webkit-transform:translateY(0px);transform:translateY(0px);opacity:1}}.card.svelte-1ah978p.svelte-1ah978p{width:100%}.card-layout.svelte-1ah978p.svelte-1ah978p{position:absolute;width:100%;height:20vh;-webkit-clip-path:polygon(0 100%, 100% 0, 100% 20%, 20% 100%);clip-path:polygon(0 100%, 100% 0, 100% 20%, 20% 100%)}.card-container.svelte-1ah978p.svelte-1ah978p{position:absolute;bottom:1vh;height:20vh;width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;color:#3feee6;overflow:hidden;-webkit-clip-path:polygon(0 100%, 100% 0, 100% 100%, 100% 100%);clip-path:polygon(0 100%, 100% 0, 100% 100%, 100% 100%)}.card-title.svelte-1ah978p.svelte-1ah978p{position:absolute;right:10px;text-align:right;font-size:1.7vmax;text-transform:uppercase;width:100%;top:53%;-webkit-transform:rotate(var(--sub-container-diagonal));transform:rotate(var(--sub-container-diagonal));color:#222121;cursor:pointer;background-color:#1f2b62;background-image:linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);background-repeat:no-repeat;background-size:100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}.experience.svelte-1ah978p.svelte-1ah978p{background-color:var(--orange)}.experience.svelte-1ah978p .card-title.svelte-1ah978p{-webkit-animation:svelte-1ah978p-cardTitleText 3s linear infinite;animation:svelte-1ah978p-cardTitleText 3s linear infinite}.about.svelte-1ah978p.svelte-1ah978p{background-color:var(--blue);-webkit-transform:translateY(5vh);transform:translateY(5vh)}.about.svelte-1ah978p .card-title.svelte-1ah978p{-webkit-animation:svelte-1ah978p-cardTitleText 3s linear 0.5s infinite;animation:svelte-1ah978p-cardTitleText 3s linear 0.5s infinite}.contact.svelte-1ah978p.svelte-1ah978p{background-color:var(--light-blue);-webkit-transform:translateY(10vh);transform:translateY(10vh)}.contact.svelte-1ah978p .card-title.svelte-1ah978p{-webkit-animation:svelte-1ah978p-cardTitleText 3s linear 1s infinite;animation:svelte-1ah978p-cardTitleText 3s linear 1s infinite}.extra.svelte-1ah978p.svelte-1ah978p{background-color:var(--black);-webkit-clip-path:polygon(0 20vh, 100% 0, 100% 100%, 0% 100%);clip-path:polygon(0 20vh, 100% 0, 100% 100%, 0% 100%);-webkit-transform:translateY(15vh);transform:translateY(15vh)}@-webkit-keyframes svelte-1ah978p-cardTitleText{0%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}5%{background-image:linear-gradient(43deg, #222121 94%, #ffffff 100%)}10%{background-image:linear-gradient(43deg, #222121 94%, #ffffff 100%)}15%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}100%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}}@keyframes svelte-1ah978p-cardTitleText{0%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}5%{background-image:linear-gradient(43deg, #222121 94%, #ffffff 100%)}10%{background-image:linear-gradient(43deg, #222121 94%, #ffffff 100%)}15%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}100%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}}",
+      map: null
+    };
+    Routes = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      let textAngle;
+      $$result.css.add(css2);
+      return `${$$result.head += `${$$result.title = `<title>Nathan Meeker || Home</title>`, ""}`, ""}
+
+
+
+<div class="${"main-container svelte-1ah978p"}"><div class="${"title svelte-1ah978p"}"><div><div class="${"animated-text"}"><div class="${"title-block svelte-1ah978p"}"><span class="${"title-main gradient-text svelte-1ah978p"}">Nathan Meeker</span>
+					<span class="${"title-secondary gradient-text svelte-1ah978p"}">Come See the Whole Picture</span></div></div></div></div>
+	<div id="${"card-container"}" class="${"card card-container svelte-1ah978p"}"><div class="${"card-layout experience experience-btn svelte-1ah978p"}"${add_attribute("this", textAngle, 0)}><h1 class="${"card-title svelte-1ah978p"}"><a href="${"/experience"}">Experience</a></h1></div>
+		<div class="${"card-layout about about-btn svelte-1ah978p"}"><h1 class="${"card-title svelte-1ah978p"}"><a href="${"/about"}">About</a></h1></div>
+		<div class="${"card-layout contact contact-btn svelte-1ah978p"}"><h1 class="${"card-title svelte-1ah978p"}"><a href="${"/contact"}">Contact</a></h1></div>
+		<div class="${"card-layout extra extra-btn svelte-1ah978p"}"></div></div>
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/SubPageTitleBar-9f07f466.js
+var css3, SubPageTitleBar;
+var init_SubPageTitleBar_9f07f466 = __esm({
+  ".svelte-kit/output/server/chunks/SubPageTitleBar-9f07f466.js"() {
+    init_shims();
+    init_app_5398027c();
+    css3 = {
+      code: ".title-bar.svelte-1rb047f{position:sticky;top:7vh;margin:30px auto;display:flex;justify-content:center;align-content:center;z-index:1;min-height:10vh}.header.svelte-1rb047f{margin-top:0px;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);width:90%;text-align:center}h1.svelte-1rb047f{height:max-content;font-size:5.5vmax;font-family:Roboto, Helvetica, sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;color:transparent;-webkit-text-fill-color:transparent;background:center\n			linear-gradient(\n				to right,\n				var(--shadow-color) 0%,\n				var(--header-color) 50%,\n				var(--header-color) 60%,\n				var(--shadow-color) 100%\n			);background-size:60%;background-clip:text;-webkit-background-clip:text;animation:svelte-1rb047f-shimmer 4s linear infinite alternate;-webkit-animation:svelte-1rb047f-shimmer 4s linear infinite alternate}@keyframes svelte-1rb047f-shimmer{0%{background-position:left}80%{background-position:left}100%{background-position:right}}@media only screen and (max-width: 600px){.title-bar.svelte-1rb047f{top:7vh;min-height:15vh}h1.svelte-1rb047f{font-size:3em;text-align:center;letter-spacing:normal}}",
+      map: null
+    };
+    SubPageTitleBar = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      let { title } = $$props;
+      let { colorVar } = $$props;
+      let { textColor } = $$props;
+      if ($$props.title === void 0 && $$bindings.title && title !== void 0)
+        $$bindings.title(title);
+      if ($$props.colorVar === void 0 && $$bindings.colorVar && colorVar !== void 0)
+        $$bindings.colorVar(colorVar);
+      if ($$props.textColor === void 0 && $$bindings.textColor && textColor !== void 0)
+        $$bindings.textColor(textColor);
+      $$result.css.add(css3);
+      return `<div class="${"title-bar svelte-1rb047f"}" style="${"background-color: " + escape(colorVar)}"><header class="${"header svelte-1rb047f"}"><h1 style="${"--header-color: " + escape(textColor) + ";"}" class="${"svelte-1rb047f"}">${escape(title)}</h1></header>
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/GlobeText-99aac40d.js
+var GlobeText_99aac40d_exports = {};
+__export(GlobeText_99aac40d_exports, {
+  default: () => GlobeText
+});
+var css4, GlobeText;
+var init_GlobeText_99aac40d = __esm({
+  ".svelte-kit/output/server/chunks/GlobeText-99aac40d.js"() {
+    init_shims();
+    init_app_5398027c();
+    css4 = {
+      code: ".container.svelte-jbbb8d{display:flex;flex-direction:column;cursor:pointer}.perspective.svelte-jbbb8d{transform-style:preserve-3d;position:absolute;top:44%;left:44%;transform:translate3d(-50%, -50%, 0);pointer-events:none}.text.svelte-jbbb8d{font-size:1.5em;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;backface-visibility:hidden;transform:preserve-3d;margin:0px auto;text-align:center;pointer-events:none}.text.svelte-jbbb8d span{position:absolute;text-transform:uppercase;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;backface-visibility:hidden;top:0;left:0;width:45px;text-align:center;transform-origin:center;transform-style:preserve-3d;transform:rotateY(\n				calc(var(--degOff) + calc(var(--rot-posit) * calc(var(--spread) / var(--totalLetters))))\n			)\n			translateZ(200px)}.card-sm.svelte-jbbb8d{position:relative;width:300px;height:300px;padding:10px;margin-bottom:60px;display:flex;justify-content:center;align-items:center;text-align:center;font-size:1.3em;border-radius:50%;box-shadow:inset 0px 0px 380px var(--orange), inset 0px 5px 60px rgb(10, 10, 10);cursor:pointer;z-index:0;pointer-events:none}.card-sm.svelte-jbbb8d::after{content:'';width:5px;height:5px;background-color:#444444;border-radius:50%;display:block;position:absolute;bottom:-50px;transform:rotate3d(1, 0, 0, 80deg);-webkit-box-shadow:0px 0px 100px 2px #444444;-moz-box-shadow:0px 0px 8px 2px #444444;box-shadow:0px 0px 100px 100px #444444;pointer-events:none}.details.svelte-jbbb8d{color:var(--orange);border:solid 2px var(--orange)}.muted.svelte-jbbb8d{filter:opacity(0.5) grayscale(0.4);transform:scale(0.7)}",
+      map: null
+    };
+    GlobeText = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      let deg = 0;
+      let globe;
+      let { totalTitleLetters } = $$props;
+      let { spread } = $$props;
+      let { route } = $$props;
+      if ($$props.totalTitleLetters === void 0 && $$bindings.totalTitleLetters && totalTitleLetters !== void 0)
+        $$bindings.totalTitleLetters(totalTitleLetters);
+      if ($$props.spread === void 0 && $$bindings.spread && spread !== void 0)
+        $$bindings.spread(spread);
+      if ($$props.route === void 0 && $$bindings.route && route !== void 0)
+        $$bindings.route(route);
+      $$result.css.add(css4);
+      return `<div class="${"container muted svelte-jbbb8d"}"${add_attribute("this", globe, 0)}><div class="${"card-sm svelte-jbbb8d"}"><div class="${"perspective svelte-jbbb8d"}"><h1 class="${"text svelte-jbbb8d"}" style="${"--degOff:-" + escape(deg) + "deg; --totalLetters:" + escape(totalTitleLetters) + "; --spread: " + escape(spread) + "deg;"}">${slots.title ? slots.title({}) : ``}</h1></div></div>
+	<a class="${"btn btn-main details svelte-jbbb8d"}"${add_attribute("href", route, 0)}>details</a>
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/ExperienceHeader-e082be50.js
+var ExperienceHeader_e082be50_exports = {};
+__export(ExperienceHeader_e082be50_exports, {
+  default: () => ExperienceHeader
+});
+var css5, ExperienceHeader;
+var init_ExperienceHeader_e082be50 = __esm({
+  ".svelte-kit/output/server/chunks/ExperienceHeader-e082be50.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_GlobeText_99aac40d();
+    css5 = {
+      code: ".card-container.svelte-1dznal4{display:flex;flex-wrap:wrap;align-content:center;justify-content:center;width:100%;margin:10px auto 10px auto}.center-text.svelte-1dznal4{text-align:center;padding:15px;font-weight:400;font-size:1.5em}",
+      map: null
+    };
+    ExperienceHeader = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css5);
+      return `<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "experience",
+        colorVar: "white",
+        textColor: "rgb(238, 174, 37)"
+      }, {}, {})}
+	<div class="${"container-border"}"><div class="${"card-container svelte-1dznal4"}"><div class="${"one"}">
+				${validate_component(GlobeText, "GlobeText").$$render($$result, {
+        totalTitleLetters: 7,
+        spread: 50,
+        route: "#general"
+      }, {}, {
+        title: () => `<span slot="${"title"}">
+						<span style="${"--rot-posit:-3;"}">g</span>
+						<span style="${"--rot-posit:-2;"}">e</span>
+						<span style="${"--rot-posit:-1;"}">n</span>
+						<span style="${"--rot-posit:0;"}">e</span>
+						<span style="${"--rot-posit:1;"}">r</span>
+						<span style="${"--rot-posit:2;"}">a</span>
+						<span style="${"--rot-posit:3;"}">l</span></span>`
+      })}
+				</div>
+			<div class="${"two"}">
+				${validate_component(GlobeText, "GlobeText").$$render($$result, {
+        totalTitleLetters: 14,
+        spread: 110,
+        route: "#network-security"
+      }, {}, {
+        title: () => `<span slot="${"title"}"><span style="${"--rot-posit:-6;"}">c</span>
+						<span style="${"--rot-posit:-5;"}">y</span>
+						<span style="${"--rot-posit:-4;"}">b</span>
+						<span style="${"--rot-posit:-3;"}">e</span>
+						<span style="${"--rot-posit:-2;"}">r</span>
+						<span style="${"--rot-posit:-1;"}"></span>
+						<span style="${"--rot-posit:0;"}">s</span>
+						<span style="${"--rot-posit:1;"}">e</span>
+						<span style="${"--rot-posit:2;"}">c</span>
+						<span style="${"--rot-posit:3;"}">u</span>
+						<span style="${"--rot-posit:4;"}">r</span>
+						<span style="${"--rot-posit:5;"}">i</span>
+						<span style="${"--rot-posit:6;"}">t</span>
+						<span style="${"--rot-posit:7;"}">y</span></span>`
+      })}</div>
+			<div class="${"three"}">${validate_component(GlobeText, "GlobeText").$$render($$result, {
+        totalTitleLetters: 15,
+        spread: 100,
+        route: "#web-development"
+      }, {}, {
+        title: () => `<span slot="${"title"}"><span style="${"--rot-posit:-7;"}">w</span>
+						<span style="${"--rot-posit:-6;"}">e</span>
+						<span style="${"--rot-posit:-5;"}">b</span>
+						<span style="${"--rot-posit:-4;"}"></span>
+						<span style="${"--rot-posit:-3;"}">d</span>
+						<span style="${"--rot-posit:-2;"}">e</span>
+						<span style="${"--rot-posit:-1;"}">v</span>
+						<span style="${"--rot-posit:0;"}">e</span>
+						<span style="${"--rot-posit:1;"}">l</span>
+						<span style="${"--rot-posit:2;"}">o</span>
+						<span style="${"--rot-posit:3;"}">p</span>
+						<span style="${"--rot-posit:4;"}">m</span>
+						<span style="${"--rot-posit:5;"}">e</span>
+						<span style="${"--rot-posit:6;"}">n</span>
+						<span style="${"--rot-posit:7;"}">t</span></span>`
+      })}</div>
+			<div class="${"four"}">${validate_component(GlobeText, "GlobeText").$$render($$result, {
+        totalTitleLetters: 19,
+        spread: 120,
+        route: "#security-management"
+      }, {}, {
+        title: () => `<span slot="${"title"}"><span style="${"--rot-posit:-9;"}">s</span>
+						<span style="${"--rot-posit:-8;"}">e</span>
+						<span style="${"--rot-posit:-7;"}">c</span>
+						<span style="${"--rot-posit:-6;"}">u</span>
+						<span style="${"--rot-posit:-5;"}">r</span>
+						<span style="${"--rot-posit:-4;"}">i</span>
+						<span style="${"--rot-posit:-3;"}">t</span>
+						<span style="${"--rot-posit:-2;"}">y</span>
+						<span style="${"--rot-posit:-1;"}"></span>
+						<span style="${"--rot-posit:0;"}">m</span>
+						<span style="${"--rot-posit:1;"}">a</span>
+						<span style="${"--rot-posit:2;"}">n</span>
+						<span style="${"--rot-posit:3;"}">a</span>
+						<span style="${"--rot-posit:4;"}">g</span>
+						<span style="${"--rot-posit:5;"}">e</span>
+						<span style="${"--rot-posit:6;"}">m</span>
+						<span style="${"--rot-posit:7;"}">e</span>
+						<span style="${"--rot-posit:8;"}">n</span>
+						<span style="${"--rot-posit:9;"}">t</span></span>`
+      })}</div>
+			<div class="${"five"}">${validate_component(GlobeText, "GlobeText").$$render($$result, {
+        totalTitleLetters: 9,
+        spread: 60,
+        route: "#education"
+      }, {}, {
+        title: () => `<span slot="${"title"}"><span style="${"--rot-posit:-5;"}">c</span>
+						<span style="${"--rot-posit:-4;"}">r</span>
+						<span style="${"--rot-posit:-3;"}">e</span>
+						<span style="${"--rot-posit:-2;"}">d</span>
+						<span style="${"--rot-posit:-1;"}">e</span>
+						<span style="${"--rot-posit:0;"}">n</span>
+						<span style="${"--rot-posit:1;"}">t</span>
+						<span style="${"--rot-posit:2;"}">i</span>
+						<span style="${"--rot-posit:3;"}">a</span>
+						<span style="${"--rot-posit:4;"}">l</span>
+						<span style="${"--rot-posit:5;"}">s</span></span>`
+      })}</div></div>
+		<p class="${"center-text svelte-1dznal4"}"><em>You can also check out my social media links at the bottom of this page.</em></p></div>
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/__layout-2d9a3c39.js
+var layout_2d9a3c39_exports = {};
+__export(layout_2d9a3c39_exports, {
+  default: () => _layout2
+});
+var css6, _layout2;
+var init_layout_2d9a3c39 = __esm({
+  ".svelte-kit/output/server/chunks/__layout-2d9a3c39.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_ExperienceHeader_e082be50();
+    init_SubPageTitleBar_9f07f466();
+    init_GlobeText_99aac40d();
+    css6 = {
+      code: ".layout-container.svelte-1j2vmps{min-height:90vh;width:100%}",
+      map: null
+    };
+    _layout2 = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css6);
+      return `${validate_component(ExperienceHeader, "ExperienceHeader").$$render($$result, {}, {}, {})}
+<div class="${"layout-container svelte-1j2vmps"}">${slots.default ? slots.default({}) : ``}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/ExperienceStyles-fcc41adc.js
+var ExperienceStyles_fcc41adc_exports = {};
+__export(ExperienceStyles_fcc41adc_exports, {
+  default: () => ExperienceStyles
+});
+var css7, ExperienceStyles;
+var init_ExperienceStyles_fcc41adc = __esm({
+  ".svelte-kit/output/server/chunks/ExperienceStyles-fcc41adc.js"() {
+    init_shims();
+    init_app_5398027c();
+    css7 = {
+      code: ".container.svelte-1jllv94{position:relative;display:grid;place-items:center;grid-template-areas:'text text image'\n			'. scroll-btn .';min-height:70vh;margin:20px auto 0px auto;padding:2em}.scroll-btn.svelte-1jllv94{grid-area:scroll-btn}.image{grid-area:image;height:25vmax;width:40vmax;margin:20px;border-radius:0.9em;box-shadow:inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text);background-position:center}.default-image.svelte-1jllv94{background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)), no-repeat}.content.svelte-1jllv94{grid-area:text;width:clamp(400px, 100%, 900px);font-size:1.5em;padding:10px}.experience-p,.experience-strong,.experience-a,.experience-li{margin:40px auto 40px auto;color:var(--experience-text)}.experience-h2{font-size:1.3em}.experience-p,.experience-strong{line-height:2em}@media only screen and (max-width: 1500px){.container.svelte-1jllv94{grid-template-areas:'image'\n				'text'\n				'scroll-btn';padding:5px}.image{height:50vmax;width:90vmax}.content.svelte-1jllv94{width:90%}}@media only screen and (max-width: 850px){.image{height:25vmax;width:50vmax}.image>p{font-size:2em}}",
+      map: null
+    };
+    ExperienceStyles = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css7);
+      return `<div class="${"container svelte-1jllv94"}">${slots.image ? slots.image({}) : `
+		<div class="${"image default-image svelte-1jllv94"}">No content</div>
+	`}
+
+	<div class="${"content svelte-1jllv94"}">${slots.content ? slots.content({}) : `
+			<div class="${"content svelte-1jllv94"}">nothing to show</div>
+		`}</div>
+	<button class="${"btn btn-main btn-center scroll-btn svelte-1jllv94"}">Scroll Top</button></div>
+
+`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/GeneralContent-857845bf.js
+var GeneralContent_857845bf_exports = {};
+__export(GeneralContent_857845bf_exports, {
+  default: () => GeneralContent
+});
+var css8, GeneralContent;
+var init_GeneralContent_857845bf = __esm({
+  ".svelte-kit/output/server/chunks/GeneralContent-857845bf.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_ExperienceStyles_fcc41adc();
+    css8 = {
+      code: ".general-image.svelte-2lrwj8{background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/geo_at_sea.jpeg') no-repeat;background-size:cover}",
+      map: null
+    };
+    GeneralContent = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css8);
+      return `<div id="${"general"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "General",
+        colorVar: "white",
+        textColor: "rgb(238, 174, 37)"
+      }, {}, {})}
+	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
+        content: () => `<span slot="${"content"}"><div><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">More than two decades of professional experience in the US Navy:</strong></h2>
+				<p class="${"experience-p"}">The first 16 years I was enlisted, spending seven as a division level manager (Chief Petty
+					Officer) where I trained and led teams ranging from 5 to 15 members in submarine
+					communications and electronic warfare techniques.
+				</p>
+				<p class="${"experience-p"}">Subsequently, I have spent the last decade as an Information Professional Officer,
+					evaluating divisional performance across the submarine force. During this time I have
+					invested heavily in training divison managers and shipboard department heads on proper
+					managment of key programs. Most often my skills were applied to physical and personnel
+					security, Communications (COMSEC) security, and Cyber Security with an emphasis on overall
+					program management, compliance, and disaster recovery.
+				</p>
+				<p class="${"experience-p"}">My project management skills have also extended to shipboard casualty and natural disaster
+					response policy. I spent six years leading teams of up to fifty personnel in crisis and
+					emergency management where we developed and tested plans for initial response, recovery,
+					and contengency operations. I hold multiple certifications and a diverse eduction and
+					training background, which demonstrates my adapability and problem solving skills.
+				</p></div></span>`,
+        image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-2lrwj8"}"></div></span>`
+      })}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/EducationCertifications-1059543e.js
+var EducationCertifications_1059543e_exports = {};
+__export(EducationCertifications_1059543e_exports, {
+  default: () => EducationCertifications
+});
+var css9, EducationCertifications;
+var init_EducationCertifications_1059543e = __esm({
+  ".svelte-kit/output/server/chunks/EducationCertifications-1059543e.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_ExperienceStyles_fcc41adc();
+    css9 = {
+      code: ".general-image.svelte-bflkz7.svelte-bflkz7{display:flex;justify-content:center;align-items:center;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7));background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7));background-size:cover}.general-image.svelte-bflkz7>h2.svelte-bflkz7{font-family:'Gochi Hand', cursive;font-size:4em;text-align:center;color:var(--experience-text)}@media only screen and (max-width: 1500px){.general-image.svelte-bflkz7.svelte-bflkz7{height:30vmax;width:90vmax}}@media only screen and (max-width: 850px){.general-image.svelte-bflkz7.svelte-bflkz7{height:25vmax;width:50vmax}.general-image.svelte-bflkz7>h2.svelte-bflkz7{font-size:2em}}",
+      map: null
+    };
+    EducationCertifications = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css9);
+      return `<div id="${"education"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "Education",
+        colorVar: "white",
+        textColor: "rgb(238, 174, 37)"
+      }, {}, {})}
+	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
+        content: () => `<span slot="${"content"}"><div><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">Professional Certifications/Education:</strong></h2>
+				<p class="${"experience-p"}">I hold civilian and Department of Defense certifications in Cyber, Personnel and Physical
+					Security along with a Bachelor&#39;s degree in Business Administration from Excelsior College.
+					I am currently four classes from completing an MBA with an emphasis in
+					Technology/Innovation Management.
+				</p>
+				<h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">Security Professional Education and Development (SPeD) certifications:</strong></h2>
+				<ul class="${"experience-ul"}"><li class="${"experience-li"}"><a class="${"experience-a"}" title="${"Center for Security Excellence SFPC certification webpage."}" href="${"https://www.cdse.edu/certification/sfpc.html"}">Security Professional Fundamentals (SFPC) 3+ years</a></li>
+					<li class="${"experience-li"}"><a class="${"experience-a"}" title="${"Center for Security Excellence PSC certification webpage."}" href="${"https://www.cdse.edu/certification/psc.html"}">Physical Security Certification (PSC) 3+ years</a></li></ul>
+				<h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">Additional Military Training:</strong></h2>
+				<ul class="${"experience-ul"}"><li class="${"experience-li"}">Navy Communications Security Management System <a class="${"experience-a"}" title="${"Navy COMSEC Management System webpage."}" href="${"https://www.navifor.usff.navy.mil/ncms/"}">(NCMS)</a> certified inspector 10+ years
+					</li>
+					<li class="${"experience-li"}">Information Systems Security Manager 7+ years</li>
+					<li class="${"experience-li"}">Operational Security Officer 5+ years</li>
+					<li class="${"experience-li"}">Emergency Management Officer 5+ years</li>
+					<li class="${"experience-li"}">Classified Material Control Officer 10+ years</li>
+					<li class="${"experience-li"}">Command Equal Opportunity Officer 2+ years</li></ul>
+				<h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">Non-military Education:</strong></h2>
+				<ul class="${"experience-ul"}"><li class="${"experience-li"}">Bachelor&#39;s degree in Business Administration (2015)</li>
+					<li class="${"experience-li"}">COMPTIA Security+ (2015)</li>
+					<li class="${"experience-li"}">Sigma Beta Delta National Honor Society for Business (2019).
+					</li></ul></div></span>`,
+        image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-bflkz7"}"><h2 class="${"svelte-bflkz7"}">Knowledge is Power!</h2></div></span>`
+      })}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/NetworkSecurity-c6c9409a.js
+var NetworkSecurity_c6c9409a_exports = {};
+__export(NetworkSecurity_c6c9409a_exports, {
+  default: () => NetworkSecurity
+});
+var css10, NetworkSecurity;
+var init_NetworkSecurity_c6c9409a = __esm({
+  ".svelte-kit/output/server/chunks/NetworkSecurity-c6c9409a.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_ExperienceStyles_fcc41adc();
+    css10 = {
+      code: ".general-image.svelte-s8zx7d{background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/pexels-pixabay-60504.jpg') no-repeat;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/pexels-pixabay-60504.jpg') no-repeat;background-size:cover}",
+      map: null
+    };
+    NetworkSecurity = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css10);
+      return `<div id="${"network-security"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "Cyber Security",
+        colorVar: "white",
+        textColor: "rgb(238, 174, 37)"
+      }, {}, {})}
+	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
+        content: () => `<span slot="${"content"}"><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">More than ten years of Cyber Security Experience:</strong></h2>
+			<p class="${"experience-p"}">My history with Networks and cyber security administration actually starts more than 20
+				years ago, with my first role as the admin of a classified network system on my first
+				submarine. However, technology and policy have so greatly evolved that those years of simple
+				hardware repair, basic user training, and minimal configuration management are
+				unrecognizable against modern requirements.
+			</p>
+			<p class="${"experience-p"}">In the last twenty years, we have seen an explosion of requirements, increased complexity in
+				threats, and an ever growing dependency on cyber-systems. My last ten years have been spent
+				observing emerging threats while developing policies and analytics adopted across the
+				submarine force by which to measure cyber resilience. As an inspector and mentor of
+				shipboard network security teams, I work to evaluate risk and prioritize elements of Navy
+				policy to achieve the most robust network posture possible.
+			</p></span>`,
+        image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-s8zx7d"}"></div></span>`
+      })}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/WebDevelopment-bef70360.js
+var WebDevelopment_bef70360_exports = {};
+__export(WebDevelopment_bef70360_exports, {
+  default: () => WebDevelopment
+});
+var css11, WebDevelopment;
+var init_WebDevelopment_bef70360 = __esm({
+  ".svelte-kit/output/server/chunks/WebDevelopment-bef70360.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_ExperienceStyles_fcc41adc();
+    css11 = {
+      code: ".general-image.svelte-r1uuql{background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/pexels-pixabay-270373.jpg') no-repeat;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/pexels-pixabay-270373.jpg') no-repeat;background-size:cover}",
+      map: null
+    };
+    WebDevelopment = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css11);
+      return `<div id="${"web-development"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "Web Development",
+        colorVar: "white",
+        textColor: "rgb(238, 174, 37)"
+      }, {}, {})}
+	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
+        content: () => `<span slot="${"content"}"><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">More than five years of Microsoft SharePoint administration:</strong></h2>
+			<p class="${"experience-p"}">Far from a SharePoint expert, I have been a quick study and efficiently managed multiple
+				sites across three commands. After COVID-19 inhibited traditional office work for an
+				extended period, I took a break from my MBA and quickly taught myself HTML, CSS, JavaScript
+				and ReactJS to develop custom web solutions to support increased work from home
+				requirements. I have developed proficiency with the SP REST API. Recently, I have been
+				seeking a mentor that would assist me with improving my SharePoint and development skills.
+				If you stumbled across this site and happen to be interested in mentoring, please contact
+				me. This site has been developed using Svelte, which I have found to be the most efficient
+				framework I have used thus far.
+			</p>
+			<p class="${"experience-p"}">My enthusiasm for development has continued to grow. I have built apps for tracking
+				personnel security clearance data, command onboarding programs, a small submarine
+				communication simulator, and some other personal projects, which I can share from my <a class="${"experience-a"}" href="${"https://github.com/navsubrm"}">GitHub</a>
+				if you are interested. I keep most of my work private due to its purpose, but if you ask and
+				I can verify you, I would be happy to let you view the code.
+			</p></span>`,
+        image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-r1uuql"}"></div></span>`
+      })}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/SecurityManagement-d097e6cd.js
+var SecurityManagement_d097e6cd_exports = {};
+__export(SecurityManagement_d097e6cd_exports, {
+  default: () => SecurityManagement
+});
+var css12, SecurityManagement;
+var init_SecurityManagement_d097e6cd = __esm({
+  ".svelte-kit/output/server/chunks/SecurityManagement-d097e6cd.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_ExperienceStyles_fcc41adc();
+    css12 = {
+      code: ".general-image.svelte-kl4qf4{height:45vmax;width:35vmax;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/Loose_lips_might_sink_ships.jpeg') no-repeat;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/Loose_lips_might_sink_ships.jpeg') no-repeat;background-size:cover;background-position:center;margin:20px;border-radius:0.9em;box-shadow:inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text)}@media only screen and (max-width: 1500px){.general-image.svelte-kl4qf4{height:50vmax;width:35vmax}}@media only screen and (max-width: 850px){.general-image.svelte-kl4qf4{height:25vmax;width:50vmax;transform:translateY(0)}}",
+      map: null
+    };
+    SecurityManagement = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css12);
+      return `<div id="${"security-management"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "Security Management",
+        colorVar: "white",
+        textColor: "rgb(238, 174, 37)"
+      }, {}, {})}
+	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
+        content: () => `<span slot="${"content"}"><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">More than 20 years of Physical and Personnel Security Experience:</strong></h2>
+			<p class="${"experience-p"}">Physical, personnel, and information security management has been a focus of my entire
+				military serivce. Most of my career has involved acting as an assistant or command security
+				manager in some form. The last ten years, I have been the head security officer in each
+				assignment. During this time, I have managed tens of thousands of requests for access to
+				classified materiels and facilities, managed background investigations, oversaw inquires to
+				security violations and incidents, certified secure facilities, and developed security
+				policy.
+			</p>
+			<p class="${"experience-p"}">I have managed small and large projects reducing cost, waste, and improving classified
+				materiel management. From producing clean alternative energy by transitioning destruction
+				processes to waste-to-energy conversion facilities to larger facility modificaitons, I am
+				passionate about finding innovative security solutions.
+			</p>
+			<p class="${"experience-p"}">In 2018, I completed the Department of Defense Security Professional Education Development
+				(SPeD) ceritifications for Security Fundamentals Professional and Physical Security.
+				<a class="${"experience-a"}" href="${"https://www.cdse.edu/Certification/About-SP\u0113D-Certification/"}" title="${"SPeD about page"}">Click here for details on the SPeD program.</a></p></span>`,
+        image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-kl4qf4"}"></div></span>`
+      })}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/index-b6f3afa5.js
+var index_b6f3afa5_exports = {};
+__export(index_b6f3afa5_exports, {
+  default: () => Experience
+});
+var Experience;
+var init_index_b6f3afa5 = __esm({
+  ".svelte-kit/output/server/chunks/index-b6f3afa5.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_GeneralContent_857845bf();
+    init_EducationCertifications_1059543e();
+    init_NetworkSecurity_c6c9409a();
+    init_WebDevelopment_bef70360();
+    init_SecurityManagement_d097e6cd();
+    init_SubPageTitleBar_9f07f466();
+    init_ExperienceStyles_fcc41adc();
+    Experience = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      return `${$$result.head += `${$$result.title = `<title>Nathan Meeker || Experience</title>`, ""}`, ""}
+
+<div>${validate_component(GeneralContent, "GeneralContent").$$render($$result, {}, {}, {})}
+	${validate_component(NetworkSecurity, "NetworkSecurity").$$render($$result, {}, {}, {})}
+	${validate_component(WebDevelopment, "WebDevelopment").$$render($$result, {}, {}, {})}
+	${validate_component(SecurityManagement, "SecurityManagement").$$render($$result, {}, {}, {})}
+	${validate_component(EducationCertifications, "EducationCertifications").$$render($$result, {}, {}, {})}
+</div>`;
+    });
   }
 });
 
@@ -5698,36 +6382,196 @@ var require_cjs = __commonJS({
   }
 });
 
-// .svelte-kit/netlify/entry.js
-__export(exports, {
-  handler: () => handler
+// .svelte-kit/output/server/chunks/contact-2a4a683c.js
+var contact_2a4a683c_exports = {};
+__export(contact_2a4a683c_exports, {
+  default: () => Contact
 });
-init_shims();
+var import_email_validator, import_dompurify, import_emailjs_com, css13, Contact;
+var init_contact_2a4a683c = __esm({
+  ".svelte-kit/output/server/chunks/contact-2a4a683c.js"() {
+    init_shims();
+    init_app_5398027c();
+    import_email_validator = __toModule(require_email_validator());
+    import_dompurify = __toModule(require_purify_cjs());
+    import_emailjs_com = __toModule(require_cjs());
+    init_SubPageTitleBar_9f07f466();
+    css13 = {
+      code: "form.svelte-1wo2eds{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;text-transform:uppercase;width:100%;margin:auto}input.svelte-1wo2eds,textarea.svelte-1wo2eds{padding:20px;margin:5px;font-size:1.5em;border:none;border-radius:0.2em;cursor:pointer}label.svelte-1wo2eds{font-size:1.5em;color:white}.contact.svelte-1wo2eds{display:flex;justify-content:center;align-items:center;margin:20vh auto;height:90vh;width:100%}.card-inner.svelte-1wo2eds{position:relative;padding:80px;width:30%;background:center\n			linear-gradient(to bottom right, var(--shadow-color) 65%, var(--light-blue) 90%);border-radius:1em;box-shadow:inset 0 0 20px var(--shadow-color), 0 0 80px var(--shadow-color)}.alert-warn{-webkit-animation:svelte-1wo2eds-alertEnter 1s linear forwards;animation:svelte-1wo2eds-alertEnter 1s linear forwards;display:inline-block;background-color:rgba(242, 242, 24, 0.8)}.alert-success{position:absolute;display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-item-align:center;align-self:center;top:25%;padding:50px;-webkit-animation:svelte-1wo2eds-msgAlertEnter 7s linear forwards;animation:svelte-1wo2eds-msgAlertEnter 7s linear forwards;background-color:rgba(49, 212, 17, 0.8)}.alert-fail{position:absolute;display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-item-align:center;align-self:center;top:25%;padding:50px;-webkit-animation:svelte-1wo2eds-msgAlertEnter 7s linear forwards;animation:svelte-1wo2eds-msgAlertEnter 7s linear forwards;background-color:rgba(237, 24, 24, 0.8)}.alert.svelte-1wo2eds{font-size:1.2vmax;padding:5px;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;border-radius:0.2em}@-webkit-keyframes svelte-1wo2eds-alertEnter{0%{background-color:none;opacity:0}50%{opacity:0.3}100%{opacity:1;background-color:rgba(242, 242, 24, 0.8)}}@keyframes svelte-1wo2eds-alertEnter{0%{background-color:none;opacity:0}50%{opacity:0.3}100%{opacity:1;background-color:rgba(242, 242, 24, 0.8)}}@-webkit-keyframes svelte-1wo2eds-msgAlertEnter{0%{opacity:0}15%{opacity:1}85%{opacity:1}100%{opacity:0}}@keyframes svelte-1wo2eds-msgAlertEnter{0%{opacity:0}15%{opacity:1}85%{opacity:1}100%{opacity:0}}@media only screen and (max-width: 1400px){.card-inner.svelte-1wo2eds{width:40%;padding:20px}}@media only screen and (max-width: 800px){.card-inner.svelte-1wo2eds{width:75%;padding:25px}}@media only screen and (max-width: 650px){.card-inner.svelte-1wo2eds{width:90%;padding:15px}}",
+      map: null
+    };
+    Contact = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      import_emailjs_com.default.init("user_RoDNRpp8DGk61m380dPFq");
+      let fName;
+      let lName;
+      let email;
+      let emailFormat;
+      let messageSuccess;
+      let messageFail;
+      $$result.css.add(css13);
+      return `${$$result.head += `${$$result.title = `<title>Nathan Meeker || Contact</title>`, ""}`, ""}
 
-// .svelte-kit/output/server/app.js
-init_shims();
-var import_email_validator = __toModule(require_email_validator());
-var import_dompurify = __toModule(require_purify_cjs());
-var import_emailjs_com = __toModule(require_cjs());
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-var _map;
+<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "Contact me",
+        colorVar: "white",
+        textColor: "var(--light-blue)"
+      }, {}, {})}
+	<div class="${"contact svelte-1wo2eds"}"><div id="${"contact-card"}" class="${"card-inner svelte-1wo2eds"}"><form action="${"#"}" id="${"contact-form"}" class="${"form svelte-1wo2eds"}"><label for="${"first-name"}" class="${"svelte-1wo2eds"}">first name: </label>
+				<input id="${"first-name"}" type="${"text"}" size="${"50"}" placeholder="${"First Name"}" class="${"svelte-1wo2eds"}"${add_attribute("value", fName, 0)}>
+				<label for="${"last-name"}" class="${"svelte-1wo2eds"}">last name: </label>
+				<input id="${"last-name"}" type="${"text"}" size="${"50"}" placeholder="${"Last Name"}" class="${"svelte-1wo2eds"}"${add_attribute("value", lName, 0)}>
+				<label for="${"email"}" class="${"svelte-1wo2eds"}">email:
+					<span class="${"alert hidden svelte-1wo2eds"}"${add_attribute("this", emailFormat, 0)}>entry is not a valid email address.</span></label>
+				<input id="${"email"}" type="${"text"}" size="${"50"}" placeholder="${"Email"}" class="${"svelte-1wo2eds"}"${add_attribute("value", email, 0)}>
+				<label for="${"message"}" class="${"svelte-1wo2eds"}">message: </label>
+				<textarea id="${"message"}" cols="${"50"}" rows="${"5"}" placeholder="${"Enter message here."}" class="${"svelte-1wo2eds"}">${""}</textarea>
+				<span id="${"message-success"}" class="${"alert hidden svelte-1wo2eds"}"${add_attribute("this", messageSuccess, 0)}>Thank you for reaching out to me! I will get back to you shortly.</span>
+				<span id="${"message-fail"}" class="${"alert hidden svelte-1wo2eds"}"${add_attribute("this", messageFail, 0)}>Your message failed to send. Check the information and try again.</span>
+				<button class="${"btn btn-main btn-contact"}" type="${"submit"}" value="${"submit"}">send message</button></form></div></div>
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/AboutStyles-7eb1ffcc.js
+var AboutStyles_7eb1ffcc_exports = {};
+__export(AboutStyles_7eb1ffcc_exports, {
+  default: () => AboutStyles
+});
+var css14, AboutStyles;
+var init_AboutStyles_7eb1ffcc = __esm({
+  ".svelte-kit/output/server/chunks/AboutStyles-7eb1ffcc.js"() {
+    init_shims();
+    init_app_5398027c();
+    css14 = {
+      code: ".container.svelte-qh7quo{position:relative;display:grid;place-items:center;grid-template-areas:'text text image'\n			'. scroll-btn .';min-height:70vh;margin:20px auto 0px auto;padding:2em}.scroll-btn.svelte-qh7quo{grid-area:scroll-btn}.image{grid-area:image;height:25vmax;width:35vmax;margin:20px;border-radius:0.9em;box-shadow:inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--about-text);background-position:center}.default-image.svelte-qh7quo{background:linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)), no-repeat;display:flex;justify-content:center;align-items:center}.content.svelte-qh7quo{grid-area:text;width:clamp(400px, 100%, 900px);font-size:1.5em;padding:10px}.about-p,.about-strong,.about-a,.about-li{margin:40px auto 40px auto;color:var(--about-text)}.about-h2{font-size:1.3em}.about-p,.about-strong{line-height:2em}@media only screen and (max-width: 1500px){.container.svelte-qh7quo{grid-template-areas:'image'\n				'text'\n				'scroll-btn';padding:5px}.image{height:50vmax;width:90vmax}.content.svelte-qh7quo{width:90%}}@media only screen and (max-width: 850px){.image{height:25vmax;width:50vmax}.image>p{font-size:2em}}",
+      map: null
+    };
+    AboutStyles = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css14);
+      return `<div class="${"container svelte-qh7quo"}">${slots.image ? slots.image({}) : `
+		<div class="${"image default-image svelte-qh7quo"}">No content</div>
+	`}
+
+	<div class="${"content svelte-qh7quo"}">${slots.content ? slots.content({}) : `
+			<div class="${"content svelte-qh7quo"}">nothing to show</div>
+		`}</div>
+	<button class="${"btn btn-main btn-center scroll-btn svelte-qh7quo"}">Scroll Top</button>
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/AboutBluf-c6660e0b.js
+var AboutBluf_c6660e0b_exports = {};
+__export(AboutBluf_c6660e0b_exports, {
+  default: () => AboutBluf
+});
+var css15, AboutBluf;
+var init_AboutBluf_c6660e0b = __esm({
+  ".svelte-kit/output/server/chunks/AboutBluf-c6660e0b.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_AboutStyles_7eb1ffcc();
+    css15 = {
+      code: ".local-image.svelte-1okodsa{background:linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),\n			url('/IMG_0261.png') no-repeat;background-size:contain;background-position:bottom;height:35vmax;width:25vmax}",
+      map: null
+    };
+    AboutBluf = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css15);
+      return `<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "bluf",
+        colorVar: "white",
+        textColor: "var(--blue)"
+      }, {}, {})}
+	${validate_component(AboutStyles, "AboutStyles").$$render($$result, {}, {}, {
+        content: () => `<span slot="${"content"}"><p class="${"about-p"}">I am a 24 year Navy veteran with a passion for finding and applying data-driven solutions to
+				improve business outcomes. In my years of service I have developed a passion for life-long
+				learning and watching technology trends for ways to improve productivity, quality of work,
+				and quality of life.
+			</p></span>`,
+        image: () => `<span slot="${"image"}"><div class="${"local-image image svelte-1okodsa"}"></div></span>`
+      })}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/AboutBackstory-be010e48.js
+var AboutBackstory_be010e48_exports = {};
+__export(AboutBackstory_be010e48_exports, {
+  default: () => AboutBackstory
+});
+var css16, AboutBackstory;
+var init_AboutBackstory_be010e48 = __esm({
+  ".svelte-kit/output/server/chunks/AboutBackstory-be010e48.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_AboutStyles_7eb1ffcc();
+    css16 = {
+      code: ".local-image.svelte-14sisee{background:linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),\n			url('/FS0A5054.png') no-repeat;background-size:cover}",
+      map: null
+    };
+    AboutBackstory = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      $$result.css.add(css16);
+      return `<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "backstory",
+        colorVar: "white",
+        textColor: "var(--blue)"
+      }, {}, {})}
+	${validate_component(AboutStyles, "AboutStyles").$$render($$result, {}, {}, {
+        content: () => `<span slot="${"content"}"><p class="${"about-p"}">Born and raised a California boy, I enlisted in the Navy in 1997 as a
+				<a class="${"about-a"}" title="${"Submarine Communications Electronics Technician description."}" href="${"https://www.careersinthemilitary.com/service-career-detail/navy/electrical-instrument-and-equipment-repairers/electronics-technician--submarine--communications"}">Submarine Electronics Technician (Communications).</a>
+				After 9 years, I promoted to Chief Petty Officer, and after 16 years commissioned as a
+				<a class="${"about-a"}" title="${"Submarine Communications Limited Duty Officer (LDO) description."}" href="${"https://www.cool.osd.mil/usn/officer/odc629x.htm"}">Submarine Communications Limited Duty Officer</a>. In 2015, I completed my Bachelor&#39;s degree in Business Administration from Excelsior
+				College. After completing My Information Warfare Officer qualification in 2016, I
+				redesignated to the
+				<a class="${"about-a"}" title="${"Information Professional Corps description."}" href="${"https://www.navy.com/careers/information-professional"}">Information Professional Corp</a>. During the same time I was working on my Technology/Innovation Management MBA. However, I
+				took 2020 off due to the COVID-19 pandemic. In that time I taught myself web-development to
+				support changing workplace requirements. At the start of 2021, I re-engaged on my MBA and
+				continue to serve in the US Navy. I have four classes left, and intend to finish in the near
+				future. I am currently working and living in Washington State enjoying the Pacific Northwest
+				with my wife and four daughters.
+			</p></span>`,
+        image: () => `<span slot="${"image"}"><div class="${"local-image image svelte-14sisee"}"></div></span>`
+      })}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/index-1d14d141.js
+var index_1d14d141_exports = {};
+__export(index_1d14d141_exports, {
+  default: () => About
+});
+var About;
+var init_index_1d14d141 = __esm({
+  ".svelte-kit/output/server/chunks/index-1d14d141.js"() {
+    init_shims();
+    init_app_5398027c();
+    init_SubPageTitleBar_9f07f466();
+    init_AboutBluf_c6660e0b();
+    init_AboutBackstory_be010e48();
+    init_AboutStyles_7eb1ffcc();
+    About = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      return `${$$result.head += `${$$result.title = `<title>Nathan Meeker || About</title>`, ""}`, ""}
+
+<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
+        title: "about me",
+        colorVar: "white",
+        textColor: "var(--blue)"
+      }, {}, {})}
+	${validate_component(AboutBluf, "AboutBluf").$$render($$result, {}, {}, {})}
+	${validate_component(AboutBackstory, "AboutBackstory").$$render($$result, {}, {}, {})}
+</div>`;
+    });
+  }
+});
+
+// .svelte-kit/output/server/chunks/app-5398027c.js
 function get_single_valued_header(headers, key) {
   const value = headers[key];
   if (Array.isArray(value)) {
@@ -5751,7 +6595,7 @@ function lowercase_keys(obj) {
   }
   return clone2;
 }
-function error$1(body) {
+function error(body) {
   return {
     status: 500,
     body,
@@ -5780,14 +6624,14 @@ async function render_endpoint(request, route, match) {
     return;
   }
   if (typeof response !== "object") {
-    return error$1(`${preface}: expected an object, got ${typeof response}`);
+    return error(`${preface}: expected an object, got ${typeof response}`);
   }
   let { status = 200, body, headers = {} } = response;
   headers = lowercase_keys(headers);
   const type = get_single_valued_header(headers, "content-type");
   const is_type_textual = is_content_type_textual(type);
   if (!is_type_textual && !(body instanceof Uint8Array || is_string(body))) {
-    return error$1(`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`);
+    return error(`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`);
   }
   let normalized_body;
   if ((typeof body === "object" || typeof body === "undefined") && !(body instanceof Uint8Array) && (!type || type.startsWith("application/json"))) {
@@ -5798,24 +6642,6 @@ async function render_endpoint(request, route, match) {
   }
   return { status, body: normalized_body, headers };
 }
-var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$";
-var unsafeChars = /[<>\b\f\n\r\t\0\u2028\u2029]/g;
-var reserved = /^(?:do|if|in|for|int|let|new|try|var|byte|case|char|else|enum|goto|long|this|void|with|await|break|catch|class|const|final|float|short|super|throw|while|yield|delete|double|export|import|native|return|switch|throws|typeof|boolean|default|extends|finally|package|private|abstract|continue|debugger|function|volatile|interface|protected|transient|implements|instanceof|synchronized)$/;
-var escaped$1 = {
-  "<": "\\u003C",
-  ">": "\\u003E",
-  "/": "\\u002F",
-  "\\": "\\\\",
-  "\b": "\\b",
-  "\f": "\\f",
-  "\n": "\\n",
-  "\r": "\\r",
-  "	": "\\t",
-  "\0": "\\0",
-  "\u2028": "\\u2028",
-  "\u2029": "\\u2029"
-};
-var objectProtoOwnPropertyNames = Object.getOwnPropertyNames(Object.prototype).sort().join("\0");
 function devalue(value) {
   var counts = new Map();
   function walk(thing) {
@@ -6025,8 +6851,6 @@ function noop$1() {
 function safe_not_equal(a, b) {
   return a != a ? b == b : a !== b || (a && typeof a === "object" || typeof a === "function");
 }
-Promise.resolve();
-var subscriber_queue = [];
 function writable(value, start = noop$1) {
   let stop;
   const subscribers = new Set();
@@ -6080,29 +6904,9 @@ function hash(value) {
   }
   return (hash2 >>> 0).toString(36);
 }
-var escape_json_string_in_html_dict = {
-  '"': '\\"',
-  "<": "\\u003C",
-  ">": "\\u003E",
-  "/": "\\u002F",
-  "\\": "\\\\",
-  "\b": "\\b",
-  "\f": "\\f",
-  "\n": "\\n",
-  "\r": "\\r",
-  "	": "\\t",
-  "\0": "\\0",
-  "\u2028": "\\u2028",
-  "\u2029": "\\u2029"
-};
 function escape_json_string_in_html(str) {
   return escape$1(str, escape_json_string_in_html_dict, (code) => `\\u${code.toString(16).toUpperCase()}`);
 }
-var escape_html_attr_dict = {
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;"
-};
 function escape_html_attr(str) {
   return '"' + escape$1(str, escape_html_attr_dict, (code) => `&#${code};`) + '"';
 }
@@ -6126,7 +6930,6 @@ function escape$1(str, dict, unicode_encoder) {
   }
   return result;
 }
-var s$1 = JSON.stringify;
 async function render_response({
   branch,
   options: options2,
@@ -6136,7 +6939,7 @@ async function render_response({
   error: error2,
   page: page2
 }) {
-  const css2 = new Set(options2.entry.css);
+  const css22 = new Set(options2.entry.css);
   const js = new Set(options2.entry.js);
   const styles = new Set();
   const serialized_data = [];
@@ -6149,7 +6952,7 @@ async function render_response({
   if (page_config.ssr) {
     branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
       if (node.css)
-        node.css.forEach((url) => css2.add(url));
+        node.css.forEach((url) => css22.add(url));
       if (node.js)
         node.js.forEach((url) => js.add(url));
       if (node.styles)
@@ -6192,7 +6995,7 @@ async function render_response({
     js.clear();
   const links = options2.amp ? styles.size > 0 || rendered.css.code.length > 0 ? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join("\n")}</style>` : "" : [
     ...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}">`),
-    ...Array.from(css2).map((dep) => `<link rel="stylesheet" href="${dep}">`)
+    ...Array.from(css22).map((dep) => `<link rel="stylesheet" href="${dep}">`)
   ].join("\n		");
   let init2 = "";
   if (options2.amp) {
@@ -6334,7 +7137,6 @@ function normalize(loaded) {
   }
   return loaded;
 }
-var s = JSON.stringify;
 async function load_node({
   request,
   options: options2,
@@ -6391,7 +7193,8 @@ async function load_node({
         }
         const resolved = resolve(request.path, url.split("?")[0]);
         let response;
-        const filename = resolved.replace(options2.paths.assets, "").slice(1);
+        const prefix = options2.paths.assets || options2.paths.base;
+        const filename = (resolved.startsWith(prefix) ? resolved.slice(prefix.length) : resolved).slice(1);
         const filename_html = `${filename}/index.html`;
         const asset = options2.manifest.assets.find((d) => d.file === filename || d.file === filename_html);
         if (asset) {
@@ -6515,7 +7318,6 @@ async function load_node({
     uses_credentials
   };
 }
-var absolute = /^([a-z]+:)?\/?\//;
 function resolve(base2, path) {
   const base_match = absolute.exec(base2);
   const path_match = absolute.exec(path);
@@ -6626,8 +7428,7 @@ async function respond$1(opts) {
   if (!leaf.prerender && state.prerender && !state.prerender.all) {
     return {
       status: 204,
-      headers: {},
-      body: ""
+      headers: {}
     };
   }
   let branch = [];
@@ -6803,48 +7604,6 @@ function read_only_form_data() {
     data: new ReadOnlyFormData(map)
   };
 }
-var ReadOnlyFormData = class {
-  constructor(map) {
-    __privateAdd(this, _map, void 0);
-    __privateSet(this, _map, map);
-  }
-  get(key) {
-    const value = __privateGet(this, _map).get(key);
-    return value && value[0];
-  }
-  getAll(key) {
-    return __privateGet(this, _map).get(key);
-  }
-  has(key) {
-    return __privateGet(this, _map).has(key);
-  }
-  *[Symbol.iterator]() {
-    for (const [key, value] of __privateGet(this, _map)) {
-      for (let i = 0; i < value.length; i += 1) {
-        yield [key, value[i]];
-      }
-    }
-  }
-  *entries() {
-    for (const [key, value] of __privateGet(this, _map)) {
-      for (let i = 0; i < value.length; i += 1) {
-        yield [key, value[i]];
-      }
-    }
-  }
-  *keys() {
-    for (const [key] of __privateGet(this, _map))
-      yield key;
-  }
-  *values() {
-    for (const [, value] of __privateGet(this, _map)) {
-      for (let i = 0; i < value.length; i += 1) {
-        yield value[i];
-      }
-    }
-  }
-};
-_map = new WeakMap();
 function parse_body(raw, headers) {
   if (!raw)
     return raw;
@@ -6967,8 +7726,7 @@ async function respond(incoming, options2, state = {}) {
                 if (request2.headers["if-none-match"] === etag) {
                   return {
                     status: 304,
-                    headers: {},
-                    body: ""
+                    headers: {}
                   };
                 }
                 response.headers["etag"] = etag;
@@ -7016,7 +7774,6 @@ function subscribe(store, ...callbacks) {
   const unsub = store.subscribe(...callbacks);
   return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
 }
-var current_component;
 function set_current_component(component) {
   current_component = component;
 }
@@ -7031,20 +7788,9 @@ function setContext(key, context) {
 function getContext(key) {
   return get_current_component().$$.context.get(key);
 }
-Promise.resolve();
-var escaped = {
-  '"': "&quot;",
-  "'": "&#39;",
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;"
-};
 function escape(html) {
   return String(html).replace(/["'&<>]/g, (match) => escaped[match]);
 }
-var missing_component = {
-  $$render: () => ""
-};
 function validate_component(component, name) {
   if (!component || !component.$$render) {
     if (name === "svelte:component")
@@ -7053,7 +7799,6 @@ function validate_component(component, name) {
   }
   return component;
 }
-var on_destroy;
 function create_ssr_component(fn) {
   function $$render(result, props, bindings, slots, context) {
     const parent_component = current_component;
@@ -7079,7 +7824,7 @@ function create_ssr_component(fn) {
       return {
         html,
         css: {
-          code: Array.from(result.css).map((css2) => css2.code).join("\n"),
+          code: Array.from(result.css).map((css22) => css22.code).join("\n"),
           map: null
         },
         head: result.title + result.head
@@ -7095,66 +7840,12 @@ function add_attribute(name, value, boolean) {
 }
 function afterUpdate() {
 }
-var css$i = {
-  code: "#svelte-announcer.svelte-1j55zn5{position:absolute;left:0;top:0;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap;width:1px;height:1px}",
-  map: `{"version":3,"file":"root.svelte","sources":["root.svelte"],"sourcesContent":["<!-- This file is generated by @sveltejs/kit \u2014 do not edit it! -->\\n<script>\\n\\timport { setContext, afterUpdate, onMount } from 'svelte';\\n\\n\\t// stores\\n\\texport let stores;\\n\\texport let page;\\n\\n\\texport let components;\\n\\texport let props_0 = null;\\n\\texport let props_1 = null;\\n\\texport let props_2 = null;\\n\\texport let props_3 = null;\\n\\n\\tsetContext('__svelte__', stores);\\n\\n\\t$: stores.page.set(page);\\n\\tafterUpdate(stores.page.notify);\\n\\n\\tlet mounted = false;\\n\\tlet navigated = false;\\n\\tlet title = null;\\n\\n\\tonMount(() => {\\n\\t\\tconst unsubscribe = stores.page.subscribe(() => {\\n\\t\\t\\tif (mounted) {\\n\\t\\t\\t\\tnavigated = true;\\n\\t\\t\\t\\ttitle = document.title || 'untitled page';\\n\\t\\t\\t}\\n\\t\\t});\\n\\n\\t\\tmounted = true;\\n\\t\\treturn unsubscribe;\\n\\t});\\n<\/script>\\n\\n<svelte:component this={components[0]} {...(props_0 || {})}>\\n\\t{#if components[1]}\\n\\t\\t<svelte:component this={components[1]} {...(props_1 || {})}>\\n\\t\\t\\t{#if components[2]}\\n\\t\\t\\t\\t<svelte:component this={components[2]} {...(props_2 || {})}>\\n\\t\\t\\t\\t\\t{#if components[3]}\\n\\t\\t\\t\\t\\t\\t<svelte:component this={components[3]} {...(props_3 || {})}/>\\n\\t\\t\\t\\t\\t{/if}\\n\\t\\t\\t\\t</svelte:component>\\n\\t\\t\\t{/if}\\n\\t\\t</svelte:component>\\n\\t{/if}\\n</svelte:component>\\n\\n{#if mounted}\\n\\t<div id=\\"svelte-announcer\\" aria-live=\\"assertive\\" aria-atomic=\\"true\\">\\n\\t\\t{#if navigated}\\n\\t\\t\\t{title}\\n\\t\\t{/if}\\n\\t</div>\\n{/if}\\n\\n<style>\\n\\t#svelte-announcer {\\n\\t\\tposition: absolute;\\n\\t\\tleft: 0;\\n\\t\\ttop: 0;\\n\\t\\tclip: rect(0 0 0 0);\\n\\t\\tclip-path: inset(50%);\\n\\t\\toverflow: hidden;\\n\\t\\twhite-space: nowrap;\\n\\t\\twidth: 1px;\\n\\t\\theight: 1px;\\n\\t}\\n</style>"],"names":[],"mappings":"AA2DC,iBAAiB,eAAC,CAAC,AAClB,QAAQ,CAAE,QAAQ,CAClB,IAAI,CAAE,CAAC,CACP,GAAG,CAAE,CAAC,CACN,IAAI,CAAE,KAAK,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CACnB,SAAS,CAAE,MAAM,GAAG,CAAC,CACrB,QAAQ,CAAE,MAAM,CAChB,WAAW,CAAE,MAAM,CACnB,KAAK,CAAE,GAAG,CACV,MAAM,CAAE,GAAG,AACZ,CAAC"}`
-};
-var Root = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let { stores } = $$props;
-  let { page: page2 } = $$props;
-  let { components } = $$props;
-  let { props_0 = null } = $$props;
-  let { props_1 = null } = $$props;
-  let { props_2 = null } = $$props;
-  let { props_3 = null } = $$props;
-  setContext("__svelte__", stores);
-  afterUpdate(stores.page.notify);
-  if ($$props.stores === void 0 && $$bindings.stores && stores !== void 0)
-    $$bindings.stores(stores);
-  if ($$props.page === void 0 && $$bindings.page && page2 !== void 0)
-    $$bindings.page(page2);
-  if ($$props.components === void 0 && $$bindings.components && components !== void 0)
-    $$bindings.components(components);
-  if ($$props.props_0 === void 0 && $$bindings.props_0 && props_0 !== void 0)
-    $$bindings.props_0(props_0);
-  if ($$props.props_1 === void 0 && $$bindings.props_1 && props_1 !== void 0)
-    $$bindings.props_1(props_1);
-  if ($$props.props_2 === void 0 && $$bindings.props_2 && props_2 !== void 0)
-    $$bindings.props_2(props_2);
-  if ($$props.props_3 === void 0 && $$bindings.props_3 && props_3 !== void 0)
-    $$bindings.props_3(props_3);
-  $$result.css.add(css$i);
-  {
-    stores.page.set(page2);
-  }
-  return `
-
-
-${validate_component(components[0] || missing_component, "svelte:component").$$render($$result, Object.assign(props_0 || {}), {}, {
-    default: () => `${components[1] ? `${validate_component(components[1] || missing_component, "svelte:component").$$render($$result, Object.assign(props_1 || {}), {}, {
-      default: () => `${components[2] ? `${validate_component(components[2] || missing_component, "svelte:component").$$render($$result, Object.assign(props_2 || {}), {}, {
-        default: () => `${components[3] ? `${validate_component(components[3] || missing_component, "svelte:component").$$render($$result, Object.assign(props_3 || {}), {}, {})}` : ``}`
-      })}` : ``}`
-    })}` : ``}`
-  })}
-
-${``}`;
-});
-var base = "";
-var assets = "";
 function set_paths(paths) {
   base = paths.base;
   assets = paths.assets || base;
 }
 function set_prerendering(value) {
 }
-var user_hooks = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module"
-});
-var template = ({ head, body }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<link rel="preconnect" href="https://fonts.googleapis.com" />\n		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n		<link rel="preconnect" href="https://fonts.googleapis.com" />\n		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n		<link\n			href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Roboto:ital,wght@0,300;0,400;0,700;1,100&display=swap"\n			rel="stylesheet"\n		/>\n		<meta name="viewport" content="width=device-width, initial-scale=1" />\n		' + head + '\n	</head>\n	<body>\n		<div id="svelte">' + body + "</div>\n	</body>\n</html>\n";
-var options = null;
-var default_settings = { paths: { "base": "", "assets": "" } };
 function init(settings = default_settings) {
   set_paths(settings.paths);
   set_prerendering(settings.prerendering || false);
@@ -7163,9 +7854,9 @@ function init(settings = default_settings) {
     amp: false,
     dev: false,
     entry: {
-      file: assets + "/_app/start-707897fa.js",
+      file: assets + "/_app/start-c8e7659e.js",
       css: [assets + "/_app/assets/start-61d1577b.css"],
-      js: [assets + "/_app/start-707897fa.js", assets + "/_app/chunks/vendor-524e618c.js"]
+      js: [assets + "/_app/start-c8e7659e.js", assets + "/_app/chunks/vendor-524e618c.js"]
     },
     fetched: void 0,
     floc: false,
@@ -7192,188 +7883,12 @@ function init(settings = default_settings) {
     trailing_slash: "never"
   };
 }
-var empty = () => ({});
-var manifest = {
-  assets: [{ "file": "FS0A5054.png", "size": 452177, "type": "image/png" }, { "file": "IMG_0261.png", "size": 469487, "type": "image/png" }, { "file": "IMG_1521.jpeg", "size": 315966, "type": "image/jpeg" }, { "file": "Loose_lips_might_sink_ships.jpeg", "size": 490531, "type": "image/jpeg" }, { "file": "favicon.png", "size": 1571, "type": "image/png" }, { "file": "geo_at_sea.jpeg", "size": 30610, "type": "image/jpeg" }, { "file": "iconfinder_social-linkedin-circle_771370.png", "size": 16440, "type": "image/png" }, { "file": "pexels-pixabay-270373.jpg", "size": 953883, "type": "image/jpeg" }, { "file": "pexels-pixabay-60504.jpg", "size": 1152439, "type": "image/jpeg" }, { "file": "portfoliumIcon.png", "size": 11057, "type": "image/png" }, { "file": "satellite-svgrepo-com.svg", "size": 4561, "type": "image/svg+xml" }],
-  layout: "src/routes/__layout.svelte",
-  error: ".svelte-kit/build/components/error.svelte",
-  routes: [
-    {
-      type: "page",
-      pattern: /^\/$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/index.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/index.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/experienceComponents\/EducationCertifications\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/EducationCertifications.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/experienceComponents\/SecurityManagement\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/SecurityManagement.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/experienceComponents\/ExperienceHeader\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/ExperienceHeader.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/experienceComponents\/ExperienceStyles\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/ExperienceStyles.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/experienceComponents\/NetworkSecurity\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/NetworkSecurity.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/experienceComponents\/GeneralContent\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/GeneralContent.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/experienceComponents\/WebDevelopment\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/WebDevelopment.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/experience\/experienceComponents\/GlobeText\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/GlobeText.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/contact\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/contact.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/about\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/about/index.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/about\/aboutComponents\/AboutBackstory\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/about/aboutComponents/AboutBackstory.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/about\/aboutComponents\/AboutStyles\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/about/aboutComponents/AboutStyles.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    },
-    {
-      type: "page",
-      pattern: /^\/about\/aboutComponents\/AboutBluf\/?$/,
-      params: empty,
-      a: ["src/routes/__layout.svelte", "src/routes/about/aboutComponents/AboutBluf.svelte"],
-      b: [".svelte-kit/build/components/error.svelte"]
-    }
-  ]
-};
-var get_hooks = (hooks) => ({
-  getSession: hooks.getSession || (() => ({})),
-  handle: hooks.handle || (({ request, resolve: resolve2 }) => resolve2(request)),
-  handleError: hooks.handleError || (({ error: error2 }) => console.error(error2.stack)),
-  externalFetch: hooks.externalFetch || fetch
-});
-var module_lookup = {
-  "src/routes/__layout.svelte": () => Promise.resolve().then(function() {
-    return __layout$1;
-  }),
-  ".svelte-kit/build/components/error.svelte": () => Promise.resolve().then(function() {
-    return error;
-  }),
-  "src/routes/index.svelte": () => Promise.resolve().then(function() {
-    return index$2;
-  }),
-  "src/routes/experience/__layout.svelte": () => Promise.resolve().then(function() {
-    return __layout;
-  }),
-  "src/routes/experience/index.svelte": () => Promise.resolve().then(function() {
-    return index$1;
-  }),
-  "src/routes/experience/experienceComponents/EducationCertifications.svelte": () => Promise.resolve().then(function() {
-    return EducationCertifications$1;
-  }),
-  "src/routes/experience/experienceComponents/SecurityManagement.svelte": () => Promise.resolve().then(function() {
-    return SecurityManagement$1;
-  }),
-  "src/routes/experience/experienceComponents/ExperienceHeader.svelte": () => Promise.resolve().then(function() {
-    return ExperienceHeader$1;
-  }),
-  "src/routes/experience/experienceComponents/ExperienceStyles.svelte": () => Promise.resolve().then(function() {
-    return ExperienceStyles$1;
-  }),
-  "src/routes/experience/experienceComponents/NetworkSecurity.svelte": () => Promise.resolve().then(function() {
-    return NetworkSecurity$1;
-  }),
-  "src/routes/experience/experienceComponents/GeneralContent.svelte": () => Promise.resolve().then(function() {
-    return GeneralContent$1;
-  }),
-  "src/routes/experience/experienceComponents/WebDevelopment.svelte": () => Promise.resolve().then(function() {
-    return WebDevelopment$1;
-  }),
-  "src/routes/experience/experienceComponents/GlobeText.svelte": () => Promise.resolve().then(function() {
-    return GlobeText$1;
-  }),
-  "src/routes/contact.svelte": () => Promise.resolve().then(function() {
-    return contact;
-  }),
-  "src/routes/about/index.svelte": () => Promise.resolve().then(function() {
-    return index;
-  }),
-  "src/routes/about/aboutComponents/AboutBackstory.svelte": () => Promise.resolve().then(function() {
-    return AboutBackstory$1;
-  }),
-  "src/routes/about/aboutComponents/AboutStyles.svelte": () => Promise.resolve().then(function() {
-    return AboutStyles$1;
-  }),
-  "src/routes/about/aboutComponents/AboutBluf.svelte": () => Promise.resolve().then(function() {
-    return AboutBluf$1;
-  })
-};
-var metadata_lookup = { "src/routes/__layout.svelte": { "entry": "pages/__layout.svelte-142ef78a.js", "css": ["assets/pages/__layout.svelte-2a51a5b2.css"], "js": ["pages/__layout.svelte-142ef78a.js", "chunks/vendor-524e618c.js"], "styles": [] }, ".svelte-kit/build/components/error.svelte": { "entry": "error.svelte-d3238427.js", "css": [], "js": ["error.svelte-d3238427.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/index.svelte": { "entry": "pages/index.svelte-ee331045.js", "css": ["assets/pages/index.svelte-1c1f001f.css"], "js": ["pages/index.svelte-ee331045.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/experience/__layout.svelte": { "entry": "pages/experience/__layout.svelte-f1314127.js", "css": ["assets/pages/experience/__layout.svelte-46660c57.css", "assets/pages/experience/experienceComponents/ExperienceHeader.svelte-02ab8d04.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/GlobeText.svelte-e5fb246a.css"], "js": ["pages/experience/__layout.svelte-f1314127.js", "chunks/vendor-524e618c.js", "pages/experience/experienceComponents/ExperienceHeader.svelte-b0f5d481.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/experience/experienceComponents/GlobeText.svelte-6f803c78.js"], "styles": [] }, "src/routes/experience/index.svelte": { "entry": "pages/experience/index.svelte-d0ca400d.js", "css": ["assets/pages/experience/experienceComponents/GeneralContent.svelte-144bea4e.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css", "assets/pages/experience/experienceComponents/EducationCertifications.svelte-25a3a173.css", "assets/pages/experience/experienceComponents/NetworkSecurity.svelte-965d8728.css", "assets/pages/experience/experienceComponents/WebDevelopment.svelte-d6145475.css", "assets/pages/experience/experienceComponents/SecurityManagement.svelte-914e484e.css"], "js": ["pages/experience/index.svelte-d0ca400d.js", "chunks/vendor-524e618c.js", "pages/experience/experienceComponents/GeneralContent.svelte-7fcbc748.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-6905a0c2.js", "pages/experience/experienceComponents/EducationCertifications.svelte-da27e55f.js", "pages/experience/experienceComponents/NetworkSecurity.svelte-5e93389a.js", "pages/experience/experienceComponents/WebDevelopment.svelte-1c1dfed1.js", "pages/experience/experienceComponents/SecurityManagement.svelte-da259e66.js"], "styles": [] }, "src/routes/experience/experienceComponents/EducationCertifications.svelte": { "entry": "pages/experience/experienceComponents/EducationCertifications.svelte-da27e55f.js", "css": ["assets/pages/experience/experienceComponents/EducationCertifications.svelte-25a3a173.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/EducationCertifications.svelte-da27e55f.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-6905a0c2.js"], "styles": [] }, "src/routes/experience/experienceComponents/SecurityManagement.svelte": { "entry": "pages/experience/experienceComponents/SecurityManagement.svelte-da259e66.js", "css": ["assets/pages/experience/experienceComponents/SecurityManagement.svelte-914e484e.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/SecurityManagement.svelte-da259e66.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-6905a0c2.js"], "styles": [] }, "src/routes/experience/experienceComponents/ExperienceHeader.svelte": { "entry": "pages/experience/experienceComponents/ExperienceHeader.svelte-b0f5d481.js", "css": ["assets/pages/experience/experienceComponents/ExperienceHeader.svelte-02ab8d04.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/GlobeText.svelte-e5fb246a.css"], "js": ["pages/experience/experienceComponents/ExperienceHeader.svelte-b0f5d481.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/experience/experienceComponents/GlobeText.svelte-6f803c78.js"], "styles": [] }, "src/routes/experience/experienceComponents/ExperienceStyles.svelte": { "entry": "pages/experience/experienceComponents/ExperienceStyles.svelte-6905a0c2.js", "css": ["assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/ExperienceStyles.svelte-6905a0c2.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/experience/experienceComponents/NetworkSecurity.svelte": { "entry": "pages/experience/experienceComponents/NetworkSecurity.svelte-5e93389a.js", "css": ["assets/pages/experience/experienceComponents/NetworkSecurity.svelte-965d8728.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/NetworkSecurity.svelte-5e93389a.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-6905a0c2.js"], "styles": [] }, "src/routes/experience/experienceComponents/GeneralContent.svelte": { "entry": "pages/experience/experienceComponents/GeneralContent.svelte-7fcbc748.js", "css": ["assets/pages/experience/experienceComponents/GeneralContent.svelte-144bea4e.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/GeneralContent.svelte-7fcbc748.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-6905a0c2.js"], "styles": [] }, "src/routes/experience/experienceComponents/WebDevelopment.svelte": { "entry": "pages/experience/experienceComponents/WebDevelopment.svelte-1c1dfed1.js", "css": ["assets/pages/experience/experienceComponents/WebDevelopment.svelte-d6145475.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/WebDevelopment.svelte-1c1dfed1.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-6905a0c2.js"], "styles": [] }, "src/routes/experience/experienceComponents/GlobeText.svelte": { "entry": "pages/experience/experienceComponents/GlobeText.svelte-6f803c78.js", "css": ["assets/pages/experience/experienceComponents/GlobeText.svelte-e5fb246a.css"], "js": ["pages/experience/experienceComponents/GlobeText.svelte-6f803c78.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/contact.svelte": { "entry": "pages/contact.svelte-7112fe6e.js", "css": ["assets/pages/contact.svelte-45c40de1.css", "assets/SubPageTitleBar-a261ac42.css"], "js": ["pages/contact.svelte-7112fe6e.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js"], "styles": [] }, "src/routes/about/index.svelte": { "entry": "pages/about/index.svelte-e7dea548.js", "css": ["assets/SubPageTitleBar-a261ac42.css", "assets/pages/about/aboutComponents/AboutBluf.svelte-a21dd151.css", "assets/pages/about/aboutComponents/AboutStyles.svelte-c8def811.css", "assets/pages/about/aboutComponents/AboutBackstory.svelte-d2ea3931.css"], "js": ["pages/about/index.svelte-e7dea548.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/about/aboutComponents/AboutBluf.svelte-9d315288.js", "pages/about/aboutComponents/AboutStyles.svelte-295b2e96.js", "pages/about/aboutComponents/AboutBackstory.svelte-4e87dbd8.js"], "styles": [] }, "src/routes/about/aboutComponents/AboutBackstory.svelte": { "entry": "pages/about/aboutComponents/AboutBackstory.svelte-4e87dbd8.js", "css": ["assets/pages/about/aboutComponents/AboutBackstory.svelte-d2ea3931.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/about/aboutComponents/AboutStyles.svelte-c8def811.css"], "js": ["pages/about/aboutComponents/AboutBackstory.svelte-4e87dbd8.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/about/aboutComponents/AboutStyles.svelte-295b2e96.js"], "styles": [] }, "src/routes/about/aboutComponents/AboutStyles.svelte": { "entry": "pages/about/aboutComponents/AboutStyles.svelte-295b2e96.js", "css": ["assets/pages/about/aboutComponents/AboutStyles.svelte-c8def811.css"], "js": ["pages/about/aboutComponents/AboutStyles.svelte-295b2e96.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/about/aboutComponents/AboutBluf.svelte": { "entry": "pages/about/aboutComponents/AboutBluf.svelte-9d315288.js", "css": ["assets/pages/about/aboutComponents/AboutBluf.svelte-a21dd151.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/about/aboutComponents/AboutStyles.svelte-c8def811.css"], "js": ["pages/about/aboutComponents/AboutBluf.svelte-9d315288.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-6d9d6234.js", "pages/about/aboutComponents/AboutStyles.svelte-295b2e96.js"], "styles": [] } };
 async function load_component(file) {
-  const { entry, css: css2, js, styles } = metadata_lookup[file];
+  const { entry, css: css22, js, styles } = metadata_lookup[file];
   return {
     module: await module_lookup[file](),
     entry: assets + "/_app/" + entry,
-    css: css2.map((dep) => assets + "/_app/" + dep),
+    css: css22.map((dep) => assets + "/_app/" + dep),
     js: js.map((dep) => assets + "/_app/" + dep),
     styles
   };
@@ -7384,669 +7899,330 @@ function render(request, {
   const host = request.headers["host"];
   return respond({ ...request, host }, options, { prerender });
 }
-var getStores = () => {
-  const stores = getContext("__svelte__");
-  return {
-    page: {
-      subscribe: stores.page.subscribe
-    },
-    navigating: {
-      subscribe: stores.navigating.subscribe
-    },
-    get preloading() {
-      console.error("stores.preloading is deprecated; use stores.navigating instead");
-      return {
-        subscribe: stores.navigating.subscribe
-      };
-    },
-    session: stores.session
-  };
-};
-var page = {
-  subscribe(fn) {
-    const store = getStores().page;
-    return store.subscribe(fn);
+var __accessCheck, __privateGet, __privateAdd, __privateSet, _map, chars, unsafeChars, reserved, escaped$1, objectProtoOwnPropertyNames, subscriber_queue, escape_json_string_in_html_dict, escape_html_attr_dict, s$1, s, absolute, ReadOnlyFormData, current_component, escaped, missing_component, on_destroy, css17, Root, base, assets, user_hooks, template, options, default_settings, empty, manifest, get_hooks, module_lookup, metadata_lookup;
+var init_app_5398027c = __esm({
+  ".svelte-kit/output/server/chunks/app-5398027c.js"() {
+    init_shims();
+    __accessCheck = (obj, member, msg) => {
+      if (!member.has(obj))
+        throw TypeError("Cannot " + msg);
+    };
+    __privateGet = (obj, member, getter) => {
+      __accessCheck(obj, member, "read from private field");
+      return getter ? getter.call(obj) : member.get(obj);
+    };
+    __privateAdd = (obj, member, value) => {
+      if (member.has(obj))
+        throw TypeError("Cannot add the same private member more than once");
+      member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+    };
+    __privateSet = (obj, member, value, setter) => {
+      __accessCheck(obj, member, "write to private field");
+      setter ? setter.call(obj, value) : member.set(obj, value);
+      return value;
+    };
+    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$";
+    unsafeChars = /[<>\b\f\n\r\t\0\u2028\u2029]/g;
+    reserved = /^(?:do|if|in|for|int|let|new|try|var|byte|case|char|else|enum|goto|long|this|void|with|await|break|catch|class|const|final|float|short|super|throw|while|yield|delete|double|export|import|native|return|switch|throws|typeof|boolean|default|extends|finally|package|private|abstract|continue|debugger|function|volatile|interface|protected|transient|implements|instanceof|synchronized)$/;
+    escaped$1 = {
+      "<": "\\u003C",
+      ">": "\\u003E",
+      "/": "\\u002F",
+      "\\": "\\\\",
+      "\b": "\\b",
+      "\f": "\\f",
+      "\n": "\\n",
+      "\r": "\\r",
+      "	": "\\t",
+      "\0": "\\0",
+      "\u2028": "\\u2028",
+      "\u2029": "\\u2029"
+    };
+    objectProtoOwnPropertyNames = Object.getOwnPropertyNames(Object.prototype).sort().join("\0");
+    Promise.resolve();
+    subscriber_queue = [];
+    escape_json_string_in_html_dict = {
+      '"': '\\"',
+      "<": "\\u003C",
+      ">": "\\u003E",
+      "/": "\\u002F",
+      "\\": "\\\\",
+      "\b": "\\b",
+      "\f": "\\f",
+      "\n": "\\n",
+      "\r": "\\r",
+      "	": "\\t",
+      "\0": "\\0",
+      "\u2028": "\\u2028",
+      "\u2029": "\\u2029"
+    };
+    escape_html_attr_dict = {
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;"
+    };
+    s$1 = JSON.stringify;
+    s = JSON.stringify;
+    absolute = /^([a-z]+:)?\/?\//;
+    ReadOnlyFormData = class {
+      constructor(map) {
+        __privateAdd(this, _map, void 0);
+        __privateSet(this, _map, map);
+      }
+      get(key) {
+        const value = __privateGet(this, _map).get(key);
+        return value && value[0];
+      }
+      getAll(key) {
+        return __privateGet(this, _map).get(key);
+      }
+      has(key) {
+        return __privateGet(this, _map).has(key);
+      }
+      *[Symbol.iterator]() {
+        for (const [key, value] of __privateGet(this, _map)) {
+          for (let i = 0; i < value.length; i += 1) {
+            yield [key, value[i]];
+          }
+        }
+      }
+      *entries() {
+        for (const [key, value] of __privateGet(this, _map)) {
+          for (let i = 0; i < value.length; i += 1) {
+            yield [key, value[i]];
+          }
+        }
+      }
+      *keys() {
+        for (const [key] of __privateGet(this, _map))
+          yield key;
+      }
+      *values() {
+        for (const [, value] of __privateGet(this, _map)) {
+          for (let i = 0; i < value.length; i += 1) {
+            yield value[i];
+          }
+        }
+      }
+    };
+    _map = new WeakMap();
+    Promise.resolve();
+    escaped = {
+      '"': "&quot;",
+      "'": "&#39;",
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;"
+    };
+    missing_component = {
+      $$render: () => ""
+    };
+    css17 = {
+      code: "#svelte-announcer.svelte-1j55zn5{position:absolute;left:0;top:0;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap;width:1px;height:1px}",
+      map: null
+    };
+    Root = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+      let { stores } = $$props;
+      let { page: page2 } = $$props;
+      let { components } = $$props;
+      let { props_0 = null } = $$props;
+      let { props_1 = null } = $$props;
+      let { props_2 = null } = $$props;
+      let { props_3 = null } = $$props;
+      setContext("__svelte__", stores);
+      afterUpdate(stores.page.notify);
+      if ($$props.stores === void 0 && $$bindings.stores && stores !== void 0)
+        $$bindings.stores(stores);
+      if ($$props.page === void 0 && $$bindings.page && page2 !== void 0)
+        $$bindings.page(page2);
+      if ($$props.components === void 0 && $$bindings.components && components !== void 0)
+        $$bindings.components(components);
+      if ($$props.props_0 === void 0 && $$bindings.props_0 && props_0 !== void 0)
+        $$bindings.props_0(props_0);
+      if ($$props.props_1 === void 0 && $$bindings.props_1 && props_1 !== void 0)
+        $$bindings.props_1(props_1);
+      if ($$props.props_2 === void 0 && $$bindings.props_2 && props_2 !== void 0)
+        $$bindings.props_2(props_2);
+      if ($$props.props_3 === void 0 && $$bindings.props_3 && props_3 !== void 0)
+        $$bindings.props_3(props_3);
+      $$result.css.add(css17);
+      {
+        stores.page.set(page2);
+      }
+      return `
+
+
+${validate_component(components[0] || missing_component, "svelte:component").$$render($$result, Object.assign(props_0 || {}), {}, {
+        default: () => `${components[1] ? `${validate_component(components[1] || missing_component, "svelte:component").$$render($$result, Object.assign(props_1 || {}), {}, {
+          default: () => `${components[2] ? `${validate_component(components[2] || missing_component, "svelte:component").$$render($$result, Object.assign(props_2 || {}), {}, {
+            default: () => `${components[3] ? `${validate_component(components[3] || missing_component, "svelte:component").$$render($$result, Object.assign(props_3 || {}), {}, {})}` : ``}`
+          })}` : ``}`
+        })}` : ``}`
+      })}
+
+${``}`;
+    });
+    base = "";
+    assets = "";
+    user_hooks = /* @__PURE__ */ Object.freeze({
+      __proto__: null,
+      [Symbol.toStringTag]: "Module"
+    });
+    template = ({ head, body }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<link rel="preconnect" href="https://fonts.googleapis.com" />\n		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n		<link rel="preconnect" href="https://fonts.googleapis.com" />\n		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n		<link\n			href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Roboto:ital,wght@0,300;0,400;0,700;1,100&display=swap"\n			rel="stylesheet"\n		/>\n		<meta name="viewport" content="width=device-width, initial-scale=1" />\n		' + head + '\n	</head>\n	<body>\n		<div id="svelte">' + body + "</div>\n	</body>\n</html>\n";
+    options = null;
+    default_settings = { paths: { "base": "", "assets": "" } };
+    empty = () => ({});
+    manifest = {
+      assets: [{ "file": "FS0A5054.png", "size": 452177, "type": "image/png" }, { "file": "IMG_0261.png", "size": 469487, "type": "image/png" }, { "file": "IMG_1521.jpeg", "size": 315966, "type": "image/jpeg" }, { "file": "Loose_lips_might_sink_ships.jpeg", "size": 490531, "type": "image/jpeg" }, { "file": "favicon.png", "size": 1571, "type": "image/png" }, { "file": "geo_at_sea.jpeg", "size": 30610, "type": "image/jpeg" }, { "file": "iconfinder_social-linkedin-circle_771370.png", "size": 16440, "type": "image/png" }, { "file": "pexels-pixabay-270373.jpg", "size": 953883, "type": "image/jpeg" }, { "file": "pexels-pixabay-60504.jpg", "size": 1152439, "type": "image/jpeg" }, { "file": "portfoliumIcon.png", "size": 11057, "type": "image/png" }, { "file": "satellite-svgrepo-com.svg", "size": 4561, "type": "image/svg+xml" }],
+      layout: "src/routes/__layout.svelte",
+      error: ".svelte-kit/build/components/error.svelte",
+      routes: [
+        {
+          type: "page",
+          pattern: /^\/$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/index.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/index.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/experienceComponents\/EducationCertifications\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/EducationCertifications.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/experienceComponents\/SecurityManagement\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/SecurityManagement.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/experienceComponents\/ExperienceHeader\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/ExperienceHeader.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/experienceComponents\/ExperienceStyles\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/ExperienceStyles.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/experienceComponents\/NetworkSecurity\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/NetworkSecurity.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/experienceComponents\/GeneralContent\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/GeneralContent.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/experienceComponents\/WebDevelopment\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/WebDevelopment.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/experience\/experienceComponents\/GlobeText\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/experience/__layout.svelte", "src/routes/experience/experienceComponents/GlobeText.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/contact\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/contact.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/about\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/about/index.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/about\/aboutComponents\/AboutBackstory\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/about/aboutComponents/AboutBackstory.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/about\/aboutComponents\/AboutStyles\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/about/aboutComponents/AboutStyles.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        },
+        {
+          type: "page",
+          pattern: /^\/about\/aboutComponents\/AboutBluf\/?$/,
+          params: empty,
+          a: ["src/routes/__layout.svelte", "src/routes/about/aboutComponents/AboutBluf.svelte"],
+          b: [".svelte-kit/build/components/error.svelte"]
+        }
+      ]
+    };
+    get_hooks = (hooks) => ({
+      getSession: hooks.getSession || (() => ({})),
+      handle: hooks.handle || (({ request, resolve: resolve2 }) => resolve2(request)),
+      handleError: hooks.handleError || (({ error: error2 }) => console.error(error2.stack)),
+      externalFetch: hooks.externalFetch || fetch
+    });
+    module_lookup = {
+      "src/routes/__layout.svelte": () => Promise.resolve().then(() => (init_layout_a4ca176e(), layout_a4ca176e_exports)),
+      ".svelte-kit/build/components/error.svelte": () => Promise.resolve().then(() => (init_error_64b6bbd0(), error_64b6bbd0_exports)),
+      "src/routes/index.svelte": () => Promise.resolve().then(() => (init_index_8b7cd299(), index_8b7cd299_exports)),
+      "src/routes/experience/__layout.svelte": () => Promise.resolve().then(() => (init_layout_2d9a3c39(), layout_2d9a3c39_exports)),
+      "src/routes/experience/index.svelte": () => Promise.resolve().then(() => (init_index_b6f3afa5(), index_b6f3afa5_exports)),
+      "src/routes/experience/experienceComponents/EducationCertifications.svelte": () => Promise.resolve().then(() => (init_EducationCertifications_1059543e(), EducationCertifications_1059543e_exports)),
+      "src/routes/experience/experienceComponents/SecurityManagement.svelte": () => Promise.resolve().then(() => (init_SecurityManagement_d097e6cd(), SecurityManagement_d097e6cd_exports)),
+      "src/routes/experience/experienceComponents/ExperienceHeader.svelte": () => Promise.resolve().then(() => (init_ExperienceHeader_e082be50(), ExperienceHeader_e082be50_exports)),
+      "src/routes/experience/experienceComponents/ExperienceStyles.svelte": () => Promise.resolve().then(() => (init_ExperienceStyles_fcc41adc(), ExperienceStyles_fcc41adc_exports)),
+      "src/routes/experience/experienceComponents/NetworkSecurity.svelte": () => Promise.resolve().then(() => (init_NetworkSecurity_c6c9409a(), NetworkSecurity_c6c9409a_exports)),
+      "src/routes/experience/experienceComponents/GeneralContent.svelte": () => Promise.resolve().then(() => (init_GeneralContent_857845bf(), GeneralContent_857845bf_exports)),
+      "src/routes/experience/experienceComponents/WebDevelopment.svelte": () => Promise.resolve().then(() => (init_WebDevelopment_bef70360(), WebDevelopment_bef70360_exports)),
+      "src/routes/experience/experienceComponents/GlobeText.svelte": () => Promise.resolve().then(() => (init_GlobeText_99aac40d(), GlobeText_99aac40d_exports)),
+      "src/routes/contact.svelte": () => Promise.resolve().then(() => (init_contact_2a4a683c(), contact_2a4a683c_exports)),
+      "src/routes/about/index.svelte": () => Promise.resolve().then(() => (init_index_1d14d141(), index_1d14d141_exports)),
+      "src/routes/about/aboutComponents/AboutBackstory.svelte": () => Promise.resolve().then(() => (init_AboutBackstory_be010e48(), AboutBackstory_be010e48_exports)),
+      "src/routes/about/aboutComponents/AboutStyles.svelte": () => Promise.resolve().then(() => (init_AboutStyles_7eb1ffcc(), AboutStyles_7eb1ffcc_exports)),
+      "src/routes/about/aboutComponents/AboutBluf.svelte": () => Promise.resolve().then(() => (init_AboutBluf_c6660e0b(), AboutBluf_c6660e0b_exports))
+    };
+    metadata_lookup = { "src/routes/__layout.svelte": { "entry": "pages/__layout.svelte-8c3d6313.js", "css": ["assets/pages/__layout.svelte-2a51a5b2.css"], "js": ["pages/__layout.svelte-8c3d6313.js", "chunks/vendor-524e618c.js"], "styles": [] }, ".svelte-kit/build/components/error.svelte": { "entry": "error.svelte-22a9d2b2.js", "css": [], "js": ["error.svelte-22a9d2b2.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/index.svelte": { "entry": "pages/index.svelte-8bcd97d1.js", "css": ["assets/pages/index.svelte-1c1f001f.css"], "js": ["pages/index.svelte-8bcd97d1.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/experience/__layout.svelte": { "entry": "pages/experience/__layout.svelte-a6d2dbd5.js", "css": ["assets/pages/experience/__layout.svelte-46660c57.css", "assets/pages/experience/experienceComponents/ExperienceHeader.svelte-02ab8d04.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/GlobeText.svelte-e5fb246a.css"], "js": ["pages/experience/__layout.svelte-a6d2dbd5.js", "chunks/vendor-524e618c.js", "pages/experience/experienceComponents/ExperienceHeader.svelte-dfe85e00.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/experience/experienceComponents/GlobeText.svelte-751cbd54.js"], "styles": [] }, "src/routes/experience/index.svelte": { "entry": "pages/experience/index.svelte-965c0805.js", "css": ["assets/pages/experience/experienceComponents/GeneralContent.svelte-144bea4e.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css", "assets/pages/experience/experienceComponents/EducationCertifications.svelte-25a3a173.css", "assets/pages/experience/experienceComponents/NetworkSecurity.svelte-965d8728.css", "assets/pages/experience/experienceComponents/WebDevelopment.svelte-d6145475.css", "assets/pages/experience/experienceComponents/SecurityManagement.svelte-914e484e.css"], "js": ["pages/experience/index.svelte-965c0805.js", "chunks/vendor-524e618c.js", "pages/experience/experienceComponents/GeneralContent.svelte-3c9358b2.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-71a3c004.js", "pages/experience/experienceComponents/EducationCertifications.svelte-2a9326e3.js", "pages/experience/experienceComponents/NetworkSecurity.svelte-d253b6be.js", "pages/experience/experienceComponents/WebDevelopment.svelte-92fc8d89.js", "pages/experience/experienceComponents/SecurityManagement.svelte-769b230c.js"], "styles": [] }, "src/routes/experience/experienceComponents/EducationCertifications.svelte": { "entry": "pages/experience/experienceComponents/EducationCertifications.svelte-2a9326e3.js", "css": ["assets/pages/experience/experienceComponents/EducationCertifications.svelte-25a3a173.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/EducationCertifications.svelte-2a9326e3.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-71a3c004.js"], "styles": [] }, "src/routes/experience/experienceComponents/SecurityManagement.svelte": { "entry": "pages/experience/experienceComponents/SecurityManagement.svelte-769b230c.js", "css": ["assets/pages/experience/experienceComponents/SecurityManagement.svelte-914e484e.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/SecurityManagement.svelte-769b230c.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-71a3c004.js"], "styles": [] }, "src/routes/experience/experienceComponents/ExperienceHeader.svelte": { "entry": "pages/experience/experienceComponents/ExperienceHeader.svelte-dfe85e00.js", "css": ["assets/pages/experience/experienceComponents/ExperienceHeader.svelte-02ab8d04.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/GlobeText.svelte-e5fb246a.css"], "js": ["pages/experience/experienceComponents/ExperienceHeader.svelte-dfe85e00.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/experience/experienceComponents/GlobeText.svelte-751cbd54.js"], "styles": [] }, "src/routes/experience/experienceComponents/ExperienceStyles.svelte": { "entry": "pages/experience/experienceComponents/ExperienceStyles.svelte-71a3c004.js", "css": ["assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/ExperienceStyles.svelte-71a3c004.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/experience/experienceComponents/NetworkSecurity.svelte": { "entry": "pages/experience/experienceComponents/NetworkSecurity.svelte-d253b6be.js", "css": ["assets/pages/experience/experienceComponents/NetworkSecurity.svelte-965d8728.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/NetworkSecurity.svelte-d253b6be.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-71a3c004.js"], "styles": [] }, "src/routes/experience/experienceComponents/GeneralContent.svelte": { "entry": "pages/experience/experienceComponents/GeneralContent.svelte-3c9358b2.js", "css": ["assets/pages/experience/experienceComponents/GeneralContent.svelte-144bea4e.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/GeneralContent.svelte-3c9358b2.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-71a3c004.js"], "styles": [] }, "src/routes/experience/experienceComponents/WebDevelopment.svelte": { "entry": "pages/experience/experienceComponents/WebDevelopment.svelte-92fc8d89.js", "css": ["assets/pages/experience/experienceComponents/WebDevelopment.svelte-d6145475.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/experience/experienceComponents/ExperienceStyles.svelte-2e3152e8.css"], "js": ["pages/experience/experienceComponents/WebDevelopment.svelte-92fc8d89.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/experience/experienceComponents/ExperienceStyles.svelte-71a3c004.js"], "styles": [] }, "src/routes/experience/experienceComponents/GlobeText.svelte": { "entry": "pages/experience/experienceComponents/GlobeText.svelte-751cbd54.js", "css": ["assets/pages/experience/experienceComponents/GlobeText.svelte-e5fb246a.css"], "js": ["pages/experience/experienceComponents/GlobeText.svelte-751cbd54.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/contact.svelte": { "entry": "pages/contact.svelte-2271cff4.js", "css": ["assets/pages/contact.svelte-45c40de1.css", "assets/SubPageTitleBar-a261ac42.css"], "js": ["pages/contact.svelte-2271cff4.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js"], "styles": [] }, "src/routes/about/index.svelte": { "entry": "pages/about/index.svelte-e2b3c898.js", "css": ["assets/SubPageTitleBar-a261ac42.css", "assets/pages/about/aboutComponents/AboutBluf.svelte-a21dd151.css", "assets/pages/about/aboutComponents/AboutStyles.svelte-c8def811.css", "assets/pages/about/aboutComponents/AboutBackstory.svelte-d2ea3931.css"], "js": ["pages/about/index.svelte-e2b3c898.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/about/aboutComponents/AboutBluf.svelte-5741b11e.js", "pages/about/aboutComponents/AboutStyles.svelte-881e449e.js", "pages/about/aboutComponents/AboutBackstory.svelte-826f0d8f.js"], "styles": [] }, "src/routes/about/aboutComponents/AboutBackstory.svelte": { "entry": "pages/about/aboutComponents/AboutBackstory.svelte-826f0d8f.js", "css": ["assets/pages/about/aboutComponents/AboutBackstory.svelte-d2ea3931.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/about/aboutComponents/AboutStyles.svelte-c8def811.css"], "js": ["pages/about/aboutComponents/AboutBackstory.svelte-826f0d8f.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/about/aboutComponents/AboutStyles.svelte-881e449e.js"], "styles": [] }, "src/routes/about/aboutComponents/AboutStyles.svelte": { "entry": "pages/about/aboutComponents/AboutStyles.svelte-881e449e.js", "css": ["assets/pages/about/aboutComponents/AboutStyles.svelte-c8def811.css"], "js": ["pages/about/aboutComponents/AboutStyles.svelte-881e449e.js", "chunks/vendor-524e618c.js"], "styles": [] }, "src/routes/about/aboutComponents/AboutBluf.svelte": { "entry": "pages/about/aboutComponents/AboutBluf.svelte-5741b11e.js", "css": ["assets/pages/about/aboutComponents/AboutBluf.svelte-a21dd151.css", "assets/SubPageTitleBar-a261ac42.css", "assets/pages/about/aboutComponents/AboutStyles.svelte-c8def811.css"], "js": ["pages/about/aboutComponents/AboutBluf.svelte-5741b11e.js", "chunks/vendor-524e618c.js", "chunks/SubPageTitleBar-e980eeac.js", "pages/about/aboutComponents/AboutStyles.svelte-881e449e.js"], "styles": [] } };
   }
-};
-var css$h = {
-  code: ".active.svelte-1pfdhft.svelte-1pfdhft{border-bottom:solid 1px black}.nav.svelte-1pfdhft.svelte-1pfdhft{position:sticky;top:0;width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;height:7vh;z-index:10;background-color:white}.nav-menu.svelte-1pfdhft.svelte-1pfdhft{display:-webkit-box;display:-ms-flexbox;display:flex;width:100%;-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end}.nav-menu.svelte-1pfdhft ul.svelte-1pfdhft,.nav-menu.svelte-1pfdhft li.svelte-1pfdhft{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;margin:5px 20px;-ms-flex-wrap:wrap;flex-wrap:wrap;-ms-flex-line-pack:space-evenly;align-content:space-evenly}.nav-menu.svelte-1pfdhft a.svelte-1pfdhft{text-decoration:none;font-weight:700;text-transform:uppercase}.nav-link.svelte-1pfdhft.svelte-1pfdhft{padding:5px 7px;border:transparent 2px #222121;color:#222121;-webkit-transition:border 0.5s;transition:border 0.5s;-webkit-transition:color 0.5s;transition:color 0.5s}.nav-link.svelte-1pfdhft.svelte-1pfdhft:hover{border:solid 2px;border-radius:0.25em;color:#222121;cursor:pointer}.nav-link.svelte-1pfdhft.svelte-1pfdhft:active{background-color:#cafafe}.nav-link.svelte-1pfdhft.svelte-1pfdhft:focus{border:solid;outline:none}.nav-link.svelte-1pfdhft.svelte-1pfdhft:inner-focus{outline:none}@media only screen and (max-width: 600px){.nav-menu.svelte-1pfdhft.svelte-1pfdhft{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center}}@media only screen and (max-width: 400px){.nav.svelte-1pfdhft ul li.svelte-1pfdhft{-webkit-box-pack:space-evenly;-ms-flex-pack:space-evenly;justify-content:space-evenly;-ms-flex-wrap:wrap;flex-wrap:wrap;margin:5px 0px}}@media only screen and (max-width: 600px){.nav.svelte-1pfdhft ul li.svelte-1pfdhft{margin:10px 0px}}",
-  map: '{"version":3,"file":"NavBar.svelte","sources":["NavBar.svelte"],"sourcesContent":["<script lang=\\"ts\\">import { page } from \'$app/stores\';\\n<\/script>\\n\\n<div class=\\"nav\\">\\n\\t<!-- Make the nav bar sticky to hold it at the top of the page.-->\\n\\t<nav class=\\"nav-menu\\">\\n\\t\\t<ul>\\n\\t\\t\\t<li class=\\"nav-link\\" class:active={$page.path === `/`}><a href=\\"/\\">home</a></li>\\n\\t\\t\\t<li class=\\"nav-link\\" class:active={$page.path === `/experience`}>\\n\\t\\t\\t\\t<a href=\\"/experience\\">experience</a>\\n\\t\\t\\t</li>\\n\\t\\t\\t<li class=\\"nav-link\\"><a href=\\"/about\\" class:active={$page.path === `/about`}>about</a></li>\\n\\t\\t\\t<li class=\\"nav-link\\">\\n\\t\\t\\t\\t<a href=\\"/contact\\" class:active={$page.path === `/contact`}>contact</a>\\n\\t\\t\\t</li>\\n\\t\\t</ul>\\n\\t</nav>\\n</div>\\n\\n<style>\\n\\t.active {\\n\\t\\tborder-bottom: solid 1px black;\\n\\t}\\n\\t.nav {\\n\\t\\tposition: sticky;\\n\\t\\ttop: 0;\\n\\t\\twidth: 100%;\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\theight: 7vh;\\n\\t\\tz-index: 10;\\n\\t\\tbackground-color: white;\\n\\t}\\n\\n\\t.nav-menu {\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\twidth: 100%;\\n\\t\\t-webkit-box-pack: end;\\n\\t\\t-ms-flex-pack: end;\\n\\t\\tjustify-content: flex-end;\\n\\t}\\n\\n\\t.nav-menu ul,\\n\\t.nav-menu li {\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\t-webkit-box-orient: horizontal;\\n\\t\\t-webkit-box-direction: normal;\\n\\t\\t-ms-flex-direction: row;\\n\\t\\tflex-direction: row;\\n\\t\\tmargin: 5px 20px;\\n\\t\\t-ms-flex-wrap: wrap;\\n\\t\\tflex-wrap: wrap;\\n\\t\\t-ms-flex-line-pack: space-evenly;\\n\\t\\talign-content: space-evenly;\\n\\t}\\n\\n\\t.nav-menu a {\\n\\t\\ttext-decoration: none;\\n\\t\\tfont-weight: 700;\\n\\t\\ttext-transform: uppercase;\\n\\t}\\n\\n\\t.nav-link {\\n\\t\\tpadding: 5px 7px;\\n\\t\\tborder: transparent 2px #222121;\\n\\t\\tcolor: #222121;\\n\\t\\t-webkit-transition: border 0.5s;\\n\\t\\ttransition: border 0.5s;\\n\\t\\t-webkit-transition: color 0.5s;\\n\\t\\ttransition: color 0.5s;\\n\\t}\\n\\n\\t.nav-link:hover {\\n\\t\\tborder: solid 2px;\\n\\t\\tborder-radius: 0.25em;\\n\\t\\tcolor: #222121;\\n\\t\\tcursor: pointer;\\n\\t}\\n\\n\\t.nav-link:active {\\n\\t\\tbackground-color: #cafafe;\\n\\t}\\n\\n\\t.nav-link:focus {\\n\\t\\tborder: solid;\\n\\t\\toutline: none;\\n\\t}\\n\\n\\t.nav-link:inner-focus {\\n\\t\\toutline: none;\\n\\t}\\n\\n\\t@media only screen and (max-width: 600px) {\\n\\t\\t.nav-menu {\\n\\t\\t\\t-webkit-box-pack: center;\\n\\t\\t\\t-ms-flex-pack: center;\\n\\t\\t\\tjustify-content: center;\\n\\t\\t}\\n\\t}\\n\\t@media only screen and (max-width: 400px) {\\n\\t\\t.nav ul li {\\n\\t\\t\\t-webkit-box-pack: space-evenly;\\n\\t\\t\\t-ms-flex-pack: space-evenly;\\n\\t\\t\\tjustify-content: space-evenly;\\n\\t\\t\\t-ms-flex-wrap: wrap;\\n\\t\\t\\tflex-wrap: wrap;\\n\\t\\t\\tmargin: 5px 0px;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 600px) {\\n\\t\\t.nav ul li {\\n\\t\\t\\tmargin: 10px 0px;\\n\\t\\t}\\n\\t}\\n</style>\\n"],"names":[],"mappings":"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"}'
-};
-var NavBar = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let $page, $$unsubscribe_page;
-  $$unsubscribe_page = subscribe(page, (value) => $page = value);
-  $$result.css.add(css$h);
-  $$unsubscribe_page();
-  return `<div class="${"nav svelte-1pfdhft"}">
-	<nav class="${"nav-menu svelte-1pfdhft"}"><ul class="${"svelte-1pfdhft"}"><li class="${["nav-link svelte-1pfdhft", $page.path === `/` ? "active" : ""].join(" ").trim()}"><a href="${"/"}" class="${"svelte-1pfdhft"}">home</a></li>
-			<li class="${["nav-link svelte-1pfdhft", $page.path === `/experience` ? "active" : ""].join(" ").trim()}"><a href="${"/experience"}" class="${"svelte-1pfdhft"}">experience</a></li>
-			<li class="${"nav-link svelte-1pfdhft"}"><a href="${"/about"}" class="${["svelte-1pfdhft", $page.path === `/about` ? "active" : ""].join(" ").trim()}">about</a></li>
-			<li class="${"nav-link svelte-1pfdhft"}"><a href="${"/contact"}" class="${["svelte-1pfdhft", $page.path === `/contact` ? "active" : ""].join(" ").trim()}">contact</a></li></ul></nav>
-</div>`;
 });
-var css$g = {
-  code: "footer.svelte-1qq6957.svelte-1qq6957{bottom:0;position:relative;display:-webkit-box;display:-ms-flexbox;display:flex;min-height:5vh;margin-top:0 auto}.footer-left.svelte-1qq6957.svelte-1qq6957,.footer-right.svelte-1qq6957.svelte-1qq6957{position:relative;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;width:50%;background-color:#55bcc9}.footer-left.svelte-1qq6957 p.svelte-1qq6957,.footer-right.svelte-1qq6957 p.svelte-1qq6957{text-align:center}.footer-right-content.svelte-1qq6957.svelte-1qq6957{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-pack:space-evenly;-ms-flex-pack:space-evenly;justify-content:space-evenly;-webkit-box-align:center;-ms-flex-align:center;align-items:center}.footer-right.svelte-1qq6957 img.svelte-1qq6957{height:40px;padding:10px;cursor:pointer}",
-  map: '{"version":3,"file":"FooterBar.svelte","sources":["FooterBar.svelte"],"sourcesContent":["<script>\\n<\/script>\\n\\n<footer class=\\"footer\\">\\n\\t<div class=\\"footer-left\\">\\n\\t\\t<div class=\\"footer-left-content\\">\\n\\t\\t\\t<p>Nathan Meeker, SFPC/PSC/Security+,</p>\\n\\t\\t</div>\\n\\t</div>\\n\\t<div class=\\"footer-right\\">\\n\\t\\t<div class=\\"footer-right-content\\">\\n\\t\\t\\t<p>Look me up on:</p>\\n\\t\\t\\t<a\\n\\t\\t\\t\\ttitle=\\"LinkedIn profile for Nathan Meeker.\\"\\n\\t\\t\\t\\thref=\\"https://www.linkedin.com/in/nathan-m-444055178/\\"\\n\\t\\t\\t\\t><img src=\\"/iconfinder_social-linkedin-circle_771370.png\\" alt=\\"LinkedIn Icon\\" /></a\\n\\t\\t\\t>\\n\\t\\t\\t<a title=\\"Portfolium profile for Nathan Meeker.\\" href=\\"https://portfolium.com/NathanMeeker2\\"\\n\\t\\t\\t\\t><img src=\\"/portfoliumIcon.png\\" alt=\\"Portfolium Icon\\" /></a\\n\\t\\t\\t>\\n\\t\\t</div>\\n\\t</div>\\n</footer>\\n\\n<style>\\n\\tfooter {\\n\\t\\tbottom: 0;\\n\\t\\tposition: relative;\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\tmin-height: 5vh;\\n\\t\\tmargin-top: 0 auto;\\n\\t}\\n\\n\\t.footer-left,\\n\\t.footer-right {\\n\\t\\tposition: relative;\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\t-webkit-box-pack: center;\\n\\t\\t-ms-flex-pack: center;\\n\\t\\tjustify-content: center;\\n\\t\\t-webkit-box-align: center;\\n\\t\\t-ms-flex-align: center;\\n\\t\\talign-items: center;\\n\\t\\twidth: 50%;\\n\\t\\tbackground-color: #55bcc9;\\n\\t}\\n\\n\\t.footer-left p,\\n\\t.footer-right p {\\n\\t\\ttext-align: center;\\n\\t}\\n\\n\\t.footer-right-content {\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\t-webkit-box-pack: space-evenly;\\n\\t\\t-ms-flex-pack: space-evenly;\\n\\t\\tjustify-content: space-evenly;\\n\\t\\t-webkit-box-align: center;\\n\\t\\t-ms-flex-align: center;\\n\\t\\talign-items: center;\\n\\t}\\n\\n\\t.footer-right img {\\n\\t\\theight: 40px;\\n\\t\\tpadding: 10px;\\n\\t\\tcursor: pointer;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAyBC,MAAM,8BAAC,CAAC,AACP,MAAM,CAAE,CAAC,CACT,QAAQ,CAAE,QAAQ,CAClB,OAAO,CAAE,WAAW,CACpB,OAAO,CAAE,WAAW,CACpB,OAAO,CAAE,IAAI,CACb,UAAU,CAAE,GAAG,CACf,UAAU,CAAE,CAAC,CAAC,IAAI,AACnB,CAAC,AAED,0CAAY,CACZ,aAAa,8BAAC,CAAC,AACd,QAAQ,CAAE,QAAQ,CAClB,OAAO,CAAE,WAAW,CACpB,OAAO,CAAE,WAAW,CACpB,OAAO,CAAE,IAAI,CACb,gBAAgB,CAAE,MAAM,CACxB,aAAa,CAAE,MAAM,CACrB,eAAe,CAAE,MAAM,CACvB,iBAAiB,CAAE,MAAM,CACzB,cAAc,CAAE,MAAM,CACtB,WAAW,CAAE,MAAM,CACnB,KAAK,CAAE,GAAG,CACV,gBAAgB,CAAE,OAAO,AAC1B,CAAC,AAED,2BAAY,CAAC,gBAAC,CACd,4BAAa,CAAC,CAAC,eAAC,CAAC,AAChB,UAAU,CAAE,MAAM,AACnB,CAAC,AAED,qBAAqB,8BAAC,CAAC,AACtB,OAAO,CAAE,WAAW,CACpB,OAAO,CAAE,WAAW,CACpB,OAAO,CAAE,IAAI,CACb,gBAAgB,CAAE,YAAY,CAC9B,aAAa,CAAE,YAAY,CAC3B,eAAe,CAAE,YAAY,CAC7B,iBAAiB,CAAE,MAAM,CACzB,cAAc,CAAE,MAAM,CACtB,WAAW,CAAE,MAAM,AACpB,CAAC,AAED,4BAAa,CAAC,GAAG,eAAC,CAAC,AAClB,MAAM,CAAE,IAAI,CACZ,OAAO,CAAE,IAAI,CACb,MAAM,CAAE,OAAO,AAChB,CAAC"}'
-};
-var FooterBar = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$g);
-  return `<footer class="${"footer svelte-1qq6957"}"><div class="${"footer-left svelte-1qq6957"}"><div class="${"footer-left-content"}"><p class="${"svelte-1qq6957"}">Nathan Meeker, SFPC/PSC/Security+,</p></div></div>
-	<div class="${"footer-right svelte-1qq6957"}"><div class="${"footer-right-content svelte-1qq6957"}"><p class="${"svelte-1qq6957"}">Look me up on:</p>
-			<a title="${"LinkedIn profile for Nathan Meeker."}" href="${"https://www.linkedin.com/in/nathan-m-444055178/"}"><img src="${"/iconfinder_social-linkedin-circle_771370.png"}" alt="${"LinkedIn Icon"}" class="${"svelte-1qq6957"}"></a>
-			<a title="${"Portfolium profile for Nathan Meeker."}" href="${"https://portfolium.com/NathanMeeker2"}"><img src="${"/portfoliumIcon.png"}" alt="${"Portfolium Icon"}" class="${"svelte-1qq6957"}"></a></div></div>
-</footer>`;
-});
-var css$f = {
-  code: ".layout-container.svelte-1j2vmps{min-height:90vh;width:100%}",
-  map: `{"version":3,"file":"__layout.svelte","sources":["__layout.svelte"],"sourcesContent":["<script>\\n\\timport '../global.css';\\n\\timport NavBar from '../components/NavBar.svelte';\\n\\timport FooterBar from '../components/FooterBar.svelte';\\n<\/script>\\n\\n<svelte:head>\\n\\t<link href=\\"https://fonts.googleapis.com/css?family=Roboto\\" rel=\\"stylesheet\\" />\\n</svelte:head>\\n\\n<NavBar />\\n<div class=\\"layout-container\\">\\n\\t<slot />\\n</div>\\n<FooterBar />\\n\\n<style>\\n\\t.layout-container {\\n\\t\\tmin-height: 90vh;\\n\\t\\twidth: 100%;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAiBC,iBAAiB,eAAC,CAAC,AAClB,UAAU,CAAE,IAAI,CAChB,KAAK,CAAE,IAAI,AACZ,CAAC"}`
-};
-var _layout$1 = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$f);
-  return `${$$result.head += `<link href="${"https://fonts.googleapis.com/css?family=Roboto"}" rel="${"stylesheet"}" data-svelte="svelte-us18fz">`, ""}
 
-${validate_component(NavBar, "NavBar").$$render($$result, {}, {}, {})}
-<div class="${"layout-container svelte-1j2vmps"}">${slots.default ? slots.default({}) : ``}</div>
-${validate_component(FooterBar, "FooterBar").$$render($$result, {}, {}, {})}`;
+// .svelte-kit/netlify/entry.js
+__export(exports, {
+  handler: () => handler
 });
-var __layout$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": _layout$1
-});
-function load({ error: error2, status }) {
-  return { props: { error: error2, status } };
-}
-var Error$1 = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let { status } = $$props;
-  let { error: error2 } = $$props;
-  if ($$props.status === void 0 && $$bindings.status && status !== void 0)
-    $$bindings.status(status);
-  if ($$props.error === void 0 && $$bindings.error && error2 !== void 0)
-    $$bindings.error(error2);
-  return `<h1>${escape(status)}</h1>
+init_shims();
 
-<pre>${escape(error2.message)}</pre>
-
-
-
-${error2.frame ? `<pre>${escape(error2.frame)}</pre>` : ``}
-${error2.stack ? `<pre>${escape(error2.stack)}</pre>` : ``}`;
-});
-var error = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": Error$1,
-  load
-});
-var css$e = {
-  code: ".main-container.svelte-1ah978p.svelte-1ah978p{position:relative}.title.svelte-1ah978p.svelte-1ah978p{position:relative;height:95vh;background-image:-webkit-gradient(\n				linear,\n				left top,\n				right top,\n				from(rgba(85, 188, 201, 0.3)),\n				to(rgba(63, 238, 230, 0.9))\n			),\n			url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\n			url('/IMG_1521.jpeg');background-repeat:no-repeat;background-size:cover;-webkit-animation:svelte-1ah978p-pictureReveal 1.5s linear 2s;animation:svelte-1ah978p-pictureReveal 1.5s linear 2s;-webkit-animation-fill-mode:backwards;animation-fill-mode:backwards;-webkit-clip-path:polygon(0 0, 100% 0, 100% 77%, 0 98%);clip-path:polygon(0 0, 100% 0, 100% 77%, 0 98%)}.title-block.svelte-1ah978p.svelte-1ah978p{position:absolute;top:40%;left:50%;width:100%;-webkit-transform:translate(-50%, -50%);transform:translate(-50%, -50%);text-align:center}.title-main.svelte-1ah978p.svelte-1ah978p{background-color:#1f2b62;background-image:linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);background-repeat:no-repeat;background-size:100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-transform:uppercase;display:block;font-size:8vmax;-webkit-animation:svelte-1ah978p-titleSwoop 1.5s linear;animation:svelte-1ah978p-titleSwoop 1.5s linear}.title-secondary.svelte-1ah978p.svelte-1ah978p{background-color:#1f2b62;background-image:linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);background-repeat:no-repeat;background-size:100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-transform:uppercase;display:block;line-height:1.5rem;letter-spacing:0.65rem;font-size:1.5vmax;margin-bottom:40px;text-align:center;-webkit-animation:svelte-1ah978p-subTitleSwoop 1.5s linear 3s;animation:svelte-1ah978p-subTitleSwoop 1.5s linear 3s;-webkit-animation-fill-mode:backwards;animation-fill-mode:backwards}@-webkit-keyframes svelte-1ah978p-pictureReveal{0%{background-image:-webkit-gradient(linear, left top, right top, from(#55bcc9), to(#3feee6)),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, #55bcc9, #3feee6), url('/IMG_1521.jpeg')}25%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.8)),\n					to(rgba(63, 238, 230, 0.97))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.8), rgba(63, 238, 230, 0.97)),\n				url('/IMG_1521.jpeg')}50%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.6)),\n					to(rgba(63, 238, 230, 0.95))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.6), rgba(63, 238, 230, 0.95)),\n				url('/IMG_1521.jpeg')}75%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.4)),\n					to(rgba(63, 238, 230, 0.93))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.4), rgba(63, 238, 230, 0.93)),\n				url('/IMG_1521.jpeg')}100%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.3)),\n					to(rgba(63, 238, 230, 0.9))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\n				url('/IMG_1521.jpeg')}}@keyframes svelte-1ah978p-pictureReveal{0%{background-image:-webkit-gradient(linear, left top, right top, from(#55bcc9), to(#3feee6)),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, #55bcc9, #3feee6), url('/IMG_1521.jpeg')}25%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.8)),\n					to(rgba(63, 238, 230, 0.97))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.8), rgba(63, 238, 230, 0.97)),\n				url('/IMG_1521.jpeg')}50%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.6)),\n					to(rgba(63, 238, 230, 0.95))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.6), rgba(63, 238, 230, 0.95)),\n				url('/IMG_1521.jpeg')}75%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.4)),\n					to(rgba(63, 238, 230, 0.93))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.4), rgba(63, 238, 230, 0.93)),\n				url('/IMG_1521.jpeg')}100%{background-image:-webkit-gradient(\n					linear,\n					left top,\n					right top,\n					from(rgba(85, 188, 201, 0.3)),\n					to(rgba(63, 238, 230, 0.9))\n				),\n				url('/IMG_1521.jpeg');background-image:linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\n				url('/IMG_1521.jpeg')}}@-webkit-keyframes svelte-1ah978p-titleSwoop{0%{width:100vw;letter-spacing:3rem;opacity:0}100%{width:100vw;letter-spacing:2px;opacity:1}}@keyframes svelte-1ah978p-titleSwoop{0%{width:100vw;letter-spacing:3rem;opacity:0}100%{width:100vw;letter-spacing:2px;opacity:1}}@-webkit-keyframes svelte-1ah978p-subTitleSwoop{0%{-webkit-transform:translateY(-60px);transform:translateY(-60px);opacity:0}100%{-webkit-transform:translateY(0px);transform:translateY(0px);opacity:1}}@keyframes svelte-1ah978p-subTitleSwoop{0%{-webkit-transform:translateY(-60px);transform:translateY(-60px);opacity:0}100%{-webkit-transform:translateY(0px);transform:translateY(0px);opacity:1}}.card.svelte-1ah978p.svelte-1ah978p{width:100%}.card-layout.svelte-1ah978p.svelte-1ah978p{position:absolute;width:100%;height:20vh;-webkit-clip-path:polygon(0 100%, 100% 0, 100% 20%, 20% 100%);clip-path:polygon(0 100%, 100% 0, 100% 20%, 20% 100%)}.card-container.svelte-1ah978p.svelte-1ah978p{position:absolute;bottom:1vh;height:20vh;width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;color:#3feee6;overflow:hidden;-webkit-clip-path:polygon(0 100%, 100% 0, 100% 100%, 100% 100%);clip-path:polygon(0 100%, 100% 0, 100% 100%, 100% 100%)}.card-title.svelte-1ah978p.svelte-1ah978p{position:absolute;right:10px;text-align:right;font-size:1.7vmax;text-transform:uppercase;width:100%;top:53%;-webkit-transform:rotate(var(--sub-container-diagonal));transform:rotate(var(--sub-container-diagonal));color:#222121;cursor:pointer;background-color:#1f2b62;background-image:linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);background-repeat:no-repeat;background-size:100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}.experience.svelte-1ah978p.svelte-1ah978p{background-color:var(--orange)}.experience.svelte-1ah978p .card-title.svelte-1ah978p{-webkit-animation:svelte-1ah978p-cardTitleText 3s linear infinite;animation:svelte-1ah978p-cardTitleText 3s linear infinite}.about.svelte-1ah978p.svelte-1ah978p{background-color:var(--blue);-webkit-transform:translateY(5vh);transform:translateY(5vh)}.about.svelte-1ah978p .card-title.svelte-1ah978p{-webkit-animation:svelte-1ah978p-cardTitleText 3s linear 0.5s infinite;animation:svelte-1ah978p-cardTitleText 3s linear 0.5s infinite}.contact.svelte-1ah978p.svelte-1ah978p{background-color:var(--light-blue);-webkit-transform:translateY(10vh);transform:translateY(10vh)}.contact.svelte-1ah978p .card-title.svelte-1ah978p{-webkit-animation:svelte-1ah978p-cardTitleText 3s linear 1s infinite;animation:svelte-1ah978p-cardTitleText 3s linear 1s infinite}.extra.svelte-1ah978p.svelte-1ah978p{background-color:var(--black);-webkit-clip-path:polygon(0 20vh, 100% 0, 100% 100%, 0% 100%);clip-path:polygon(0 20vh, 100% 0, 100% 100%, 0% 100%);-webkit-transform:translateY(15vh);transform:translateY(15vh)}@-webkit-keyframes svelte-1ah978p-cardTitleText{0%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}5%{background-image:linear-gradient(43deg, #222121 94%, #ffffff 100%)}10%{background-image:linear-gradient(43deg, #222121 94%, #ffffff 100%)}15%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}100%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}}@keyframes svelte-1ah978p-cardTitleText{0%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}5%{background-image:linear-gradient(43deg, #222121 94%, #ffffff 100%)}10%{background-image:linear-gradient(43deg, #222121 94%, #ffffff 100%)}15%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}100%{background-image:linear-gradient(-43deg, #222121 100%, #ffffff 100%)}}",
-  map: `{"version":3,"file":"index.svelte","sources":["index.svelte"],"sourcesContent":["<script lang=\\"ts\\">import { onMount } from 'svelte';\\nimport { fly, fade } from 'svelte/transition';\\nlet textAngle;\\nonMount(() => adjustText(textAngle));\\nconst adjustText = (node) => {\\n    const sideA = node.clientHeight; //Height\\n    const sideB = node.clientWidth; //Width\\n    const angle = Math.atan2(sideA, sideB); //tangent of a/b gives angle in radians\\n    document.documentElement.style.setProperty('--top-calc', \`\${650}%\`);\\n    document.documentElement.style.setProperty('--sub-container-diagonal', \`-\${angle}rad\`);\\n};\\n<\/script>\\n\\n<svelte:head>\\n\\t<title>Nathan Meeker || Home</title>\\n</svelte:head>\\n\\n<svelte:window\\n\\ton:resize={() => {\\n\\t\\tadjustText(textAngle);\\n\\t}}\\n/>\\n\\n<div class=\\"main-container\\" in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>\\n\\t<div class=\\"title\\">\\n\\t\\t<div>\\n\\t\\t\\t<div class=\\"animated-text\\">\\n\\t\\t\\t\\t<div class=\\"title-block\\">\\n\\t\\t\\t\\t\\t<span class=\\"title-main gradient-text\\">Nathan Meeker</span>\\n\\t\\t\\t\\t\\t<span class=\\"title-secondary gradient-text\\">Come See the Whole Picture</span>\\n\\t\\t\\t\\t</div>\\n\\t\\t\\t</div>\\n\\t\\t</div>\\n\\t</div>\\n\\t<div id=\\"card-container\\" class=\\"card card-container\\">\\n\\t\\t<div class=\\"card-layout experience experience-btn\\" bind:this={textAngle}>\\n\\t\\t\\t<h1 class=\\"card-title\\"><a href=\\"/experience\\">Experience</a></h1>\\n\\t\\t</div>\\n\\t\\t<div class=\\"card-layout about about-btn\\">\\n\\t\\t\\t<h1 class=\\"card-title\\"><a href=\\"/about\\">About</a></h1>\\n\\t\\t</div>\\n\\t\\t<div class=\\"card-layout contact contact-btn\\">\\n\\t\\t\\t<h1 class=\\"card-title\\"><a href=\\"/contact\\">Contact</a></h1>\\n\\t\\t</div>\\n\\t\\t<div class=\\"card-layout extra extra-btn\\" />\\n\\t</div>\\n</div>\\n\\n<style>\\n\\t.main-container {\\n\\t\\tposition: relative;\\n\\t}\\n\\t.title {\\n\\t\\tposition: relative;\\n\\t\\theight: 95vh;\\n\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\tright top,\\n\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.3)),\\n\\t\\t\\t\\tto(rgba(63, 238, 230, 0.9))\\n\\t\\t\\t),\\n\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\\n\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\tbackground-repeat: no-repeat;\\n\\t\\tbackground-size: cover;\\n\\t\\t-webkit-animation: pictureReveal 1.5s linear 2s;\\n\\t\\tanimation: pictureReveal 1.5s linear 2s;\\n\\t\\t-webkit-animation-fill-mode: backwards;\\n\\t\\tanimation-fill-mode: backwards;\\n\\t\\t-webkit-clip-path: polygon(0 0, 100% 0, 100% 77%, 0 98%);\\n\\t\\tclip-path: polygon(0 0, 100% 0, 100% 77%, 0 98%);\\n\\t}\\n\\n\\t.title-block {\\n\\t\\tposition: absolute;\\n\\t\\ttop: 40%;\\n\\t\\tleft: 50%;\\n\\t\\twidth: 100%;\\n\\t\\t-webkit-transform: translate(-50%, -50%);\\n\\t\\ttransform: translate(-50%, -50%);\\n\\t\\ttext-align: center;\\n\\t}\\n\\n\\t.title-main {\\n\\t\\tbackground-color: #1f2b62;\\n\\t\\tbackground-image: linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);\\n\\t\\tbackground-repeat: no-repeat;\\n\\t\\tbackground-size: 100%;\\n\\t\\t-webkit-background-clip: text;\\n\\t\\tbackground-clip: text;\\n\\t\\tcolor: transparent;\\n\\t\\t-webkit-text-fill-color: transparent;\\n\\t\\ttext-transform: uppercase;\\n\\t\\tdisplay: block;\\n\\t\\tfont-size: 8vmax;\\n\\t\\t-webkit-animation: titleSwoop 1.5s linear;\\n\\t\\tanimation: titleSwoop 1.5s linear;\\n\\t}\\n\\n\\t.title-secondary {\\n\\t\\tbackground-color: #1f2b62;\\n\\t\\tbackground-image: linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);\\n\\t\\tbackground-repeat: no-repeat;\\n\\t\\tbackground-size: 100%;\\n\\t\\t-webkit-background-clip: text;\\n\\t\\tbackground-clip: text;\\n\\t\\tcolor: transparent;\\n\\t\\t-webkit-text-fill-color: transparent;\\n\\t\\ttext-transform: uppercase;\\n\\t\\tdisplay: block;\\n\\t\\tline-height: 1.5rem;\\n\\t\\tletter-spacing: 0.65rem;\\n\\t\\tfont-size: 1.5vmax;\\n\\t\\tmargin-bottom: 40px;\\n\\t\\ttext-align: center;\\n\\t\\t-webkit-animation: subTitleSwoop 1.5s linear 3s;\\n\\t\\tanimation: subTitleSwoop 1.5s linear 3s;\\n\\t\\t-webkit-animation-fill-mode: backwards;\\n\\t\\tanimation-fill-mode: backwards;\\n\\t}\\n\\n\\t@-webkit-keyframes pictureReveal {\\n\\t\\t0% {\\n\\t\\t\\tbackground-image: -webkit-gradient(linear, left top, right top, from(#55bcc9), to(#3feee6)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, #55bcc9, #3feee6), url('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t\\t25% {\\n\\t\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\t\\tright top,\\n\\t\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.8)),\\n\\t\\t\\t\\t\\tto(rgba(63, 238, 230, 0.97))\\n\\t\\t\\t\\t),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.8), rgba(63, 238, 230, 0.97)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t\\t50% {\\n\\t\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\t\\tright top,\\n\\t\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.6)),\\n\\t\\t\\t\\t\\tto(rgba(63, 238, 230, 0.95))\\n\\t\\t\\t\\t),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.6), rgba(63, 238, 230, 0.95)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t\\t75% {\\n\\t\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\t\\tright top,\\n\\t\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.4)),\\n\\t\\t\\t\\t\\tto(rgba(63, 238, 230, 0.93))\\n\\t\\t\\t\\t),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.4), rgba(63, 238, 230, 0.93)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\t\\tright top,\\n\\t\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.3)),\\n\\t\\t\\t\\t\\tto(rgba(63, 238, 230, 0.9))\\n\\t\\t\\t\\t),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t}\\n\\n\\t@keyframes pictureReveal {\\n\\t\\t0% {\\n\\t\\t\\tbackground-image: -webkit-gradient(linear, left top, right top, from(#55bcc9), to(#3feee6)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, #55bcc9, #3feee6), url('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t\\t25% {\\n\\t\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\t\\tright top,\\n\\t\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.8)),\\n\\t\\t\\t\\t\\tto(rgba(63, 238, 230, 0.97))\\n\\t\\t\\t\\t),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.8), rgba(63, 238, 230, 0.97)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t\\t50% {\\n\\t\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\t\\tright top,\\n\\t\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.6)),\\n\\t\\t\\t\\t\\tto(rgba(63, 238, 230, 0.95))\\n\\t\\t\\t\\t),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.6), rgba(63, 238, 230, 0.95)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t\\t75% {\\n\\t\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\t\\tright top,\\n\\t\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.4)),\\n\\t\\t\\t\\t\\tto(rgba(63, 238, 230, 0.93))\\n\\t\\t\\t\\t),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.4), rgba(63, 238, 230, 0.93)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\tbackground-image: -webkit-gradient(\\n\\t\\t\\t\\t\\tlinear,\\n\\t\\t\\t\\t\\tleft top,\\n\\t\\t\\t\\t\\tright top,\\n\\t\\t\\t\\t\\tfrom(rgba(85, 188, 201, 0.3)),\\n\\t\\t\\t\\t\\tto(rgba(63, 238, 230, 0.9))\\n\\t\\t\\t\\t),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t\\tbackground-image: linear-gradient(to right, rgba(85, 188, 201, 0.3), rgba(63, 238, 230, 0.9)),\\n\\t\\t\\t\\turl('/IMG_1521.jpeg');\\n\\t\\t}\\n\\t}\\n\\n\\t@-webkit-keyframes titleSwoop {\\n\\t\\t0% {\\n\\t\\t\\twidth: 100vw;\\n\\t\\t\\tletter-spacing: 3rem;\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\twidth: 100vw;\\n\\t\\t\\tletter-spacing: 2px;\\n\\t\\t\\topacity: 1;\\n\\t\\t}\\n\\t}\\n\\n\\t@keyframes titleSwoop {\\n\\t\\t0% {\\n\\t\\t\\twidth: 100vw;\\n\\t\\t\\tletter-spacing: 3rem;\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\twidth: 100vw;\\n\\t\\t\\tletter-spacing: 2px;\\n\\t\\t\\topacity: 1;\\n\\t\\t}\\n\\t}\\n\\n\\t@-webkit-keyframes subTitleSwoop {\\n\\t\\t0% {\\n\\t\\t\\t-webkit-transform: translateY(-60px);\\n\\t\\t\\ttransform: translateY(-60px);\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\t-webkit-transform: translateY(0px);\\n\\t\\t\\ttransform: translateY(0px);\\n\\t\\t\\topacity: 1;\\n\\t\\t}\\n\\t}\\n\\n\\t@keyframes subTitleSwoop {\\n\\t\\t0% {\\n\\t\\t\\t-webkit-transform: translateY(-60px);\\n\\t\\t\\ttransform: translateY(-60px);\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\t-webkit-transform: translateY(0px);\\n\\t\\t\\ttransform: translateY(0px);\\n\\t\\t\\topacity: 1;\\n\\t\\t}\\n\\t}\\n\\t.card {\\n\\t\\twidth: 100%;\\n\\t}\\n\\n\\t.card-layout {\\n\\t\\tposition: absolute;\\n\\t\\twidth: 100%;\\n\\t\\theight: 20vh;\\n\\t\\t-webkit-clip-path: polygon(0 100%, 100% 0, 100% 20%, 20% 100%);\\n\\t\\tclip-path: polygon(0 100%, 100% 0, 100% 20%, 20% 100%);\\n\\t}\\n\\n\\t.card-container {\\n\\t\\tposition: absolute;\\n\\t\\tbottom: 1vh;\\n\\t\\theight: 20vh;\\n\\t\\twidth: 100%;\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\t-webkit-box-orient: vertical;\\n\\t\\t-webkit-box-direction: normal;\\n\\t\\t-ms-flex-direction: column;\\n\\t\\tflex-direction: column;\\n\\t\\tcolor: #3feee6;\\n\\t\\toverflow: hidden;\\n\\t\\t-webkit-clip-path: polygon(0 100%, 100% 0, 100% 100%, 100% 100%);\\n\\t\\tclip-path: polygon(0 100%, 100% 0, 100% 100%, 100% 100%);\\n\\t}\\n\\n\\t.card-title {\\n\\t\\tposition: absolute;\\n\\t\\tright: 10px;\\n\\t\\ttext-align: right;\\n\\t\\tfont-size: 1.7vmax;\\n\\t\\ttext-transform: uppercase;\\n\\t\\twidth: 100%;\\n\\t\\ttop: 53%;\\n\\t\\t-webkit-transform: rotate(var(--sub-container-diagonal));\\n\\t\\ttransform: rotate(var(--sub-container-diagonal));\\n\\t\\tcolor: #222121;\\n\\t\\tcursor: pointer;\\n\\t\\tbackground-color: #1f2b62;\\n\\t\\tbackground-image: linear-gradient(43deg, #1f2b62 0%, #9a1f92 51%, #120d45 94%, #ffffff 100%);\\n\\t\\tbackground-repeat: no-repeat;\\n\\t\\tbackground-size: 100%;\\n\\t\\t-webkit-background-clip: text;\\n\\t\\tbackground-clip: text;\\n\\t\\tcolor: transparent;\\n\\t\\t-webkit-text-fill-color: transparent;\\n\\t}\\n\\n\\t.experience {\\n\\t\\tbackground-color: var(--orange);\\n\\t}\\n\\t.experience .card-title {\\n\\t\\t-webkit-animation: cardTitleText 3s linear infinite;\\n\\t\\tanimation: cardTitleText 3s linear infinite;\\n\\t}\\n\\n\\t.about {\\n\\t\\tbackground-color: var(--blue);\\n\\t\\t-webkit-transform: translateY(5vh);\\n\\t\\ttransform: translateY(5vh);\\n\\t}\\n\\n\\t.about .card-title {\\n\\t\\t-webkit-animation: cardTitleText 3s linear 0.5s infinite;\\n\\t\\tanimation: cardTitleText 3s linear 0.5s infinite;\\n\\t}\\n\\n\\t.contact {\\n\\t\\tbackground-color: var(--light-blue);\\n\\t\\t-webkit-transform: translateY(10vh);\\n\\t\\ttransform: translateY(10vh);\\n\\t}\\n\\t.contact .card-title {\\n\\t\\t-webkit-animation: cardTitleText 3s linear 1s infinite;\\n\\t\\tanimation: cardTitleText 3s linear 1s infinite;\\n\\t}\\n\\n\\t.extra {\\n\\t\\tbackground-color: var(--black);\\n\\t\\t-webkit-clip-path: polygon(0 20vh, 100% 0, 100% 100%, 0% 100%);\\n\\t\\tclip-path: polygon(0 20vh, 100% 0, 100% 100%, 0% 100%);\\n\\t\\t-webkit-transform: translateY(15vh);\\n\\t\\ttransform: translateY(15vh);\\n\\t}\\n\\n\\t@-webkit-keyframes cardTitleText {\\n\\t\\t0% {\\n\\t\\t\\tbackground-image: linear-gradient(-43deg, #222121 100%, #ffffff 100%);\\n\\t\\t}\\n\\t\\t5% {\\n\\t\\t\\tbackground-image: linear-gradient(43deg, #222121 94%, #ffffff 100%);\\n\\t\\t}\\n\\t\\t10% {\\n\\t\\t\\tbackground-image: linear-gradient(43deg, #222121 94%, #ffffff 100%);\\n\\t\\t}\\n\\t\\t15% {\\n\\t\\t\\tbackground-image: linear-gradient(-43deg, #222121 100%, #ffffff 100%);\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\tbackground-image: linear-gradient(-43deg, #222121 100%, #ffffff 100%);\\n\\t\\t}\\n\\t}\\n\\n\\t@keyframes cardTitleText {\\n\\t\\t0% {\\n\\t\\t\\tbackground-image: linear-gradient(-43deg, #222121 100%, #ffffff 100%);\\n\\t\\t}\\n\\t\\t5% {\\n\\t\\t\\tbackground-image: linear-gradient(43deg, #222121 94%, #ffffff 100%);\\n\\t\\t}\\n\\t\\t10% {\\n\\t\\t\\tbackground-image: linear-gradient(43deg, #222121 94%, #ffffff 100%);\\n\\t\\t}\\n\\t\\t15% {\\n\\t\\t\\tbackground-image: linear-gradient(-43deg, #222121 100%, #ffffff 100%);\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\tbackground-image: linear-gradient(-43deg, #222121 100%, #ffffff 100%);\\n\\t\\t}\\n\\t}\\n</style>\\n"],"names":[],"mappings":"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"}`
-};
-var Routes = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let textAngle;
-  $$result.css.add(css$e);
-  return `${$$result.head += `${$$result.title = `<title>Nathan Meeker || Home</title>`, ""}`, ""}
-
-
-
-<div class="${"main-container svelte-1ah978p"}"><div class="${"title svelte-1ah978p"}"><div><div class="${"animated-text"}"><div class="${"title-block svelte-1ah978p"}"><span class="${"title-main gradient-text svelte-1ah978p"}">Nathan Meeker</span>
-					<span class="${"title-secondary gradient-text svelte-1ah978p"}">Come See the Whole Picture</span></div></div></div></div>
-	<div id="${"card-container"}" class="${"card card-container svelte-1ah978p"}"><div class="${"card-layout experience experience-btn svelte-1ah978p"}"${add_attribute("this", textAngle, 0)}><h1 class="${"card-title svelte-1ah978p"}"><a href="${"/experience"}">Experience</a></h1></div>
-		<div class="${"card-layout about about-btn svelte-1ah978p"}"><h1 class="${"card-title svelte-1ah978p"}"><a href="${"/about"}">About</a></h1></div>
-		<div class="${"card-layout contact contact-btn svelte-1ah978p"}"><h1 class="${"card-title svelte-1ah978p"}"><a href="${"/contact"}">Contact</a></h1></div>
-		<div class="${"card-layout extra extra-btn svelte-1ah978p"}"></div></div>
-</div>`;
-});
-var index$2 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": Routes
-});
-var css$d = {
-  code: ".title-bar.svelte-1rb047f{position:sticky;top:7vh;margin:30px auto;display:flex;justify-content:center;align-content:center;z-index:1;min-height:10vh}.header.svelte-1rb047f{margin-top:0px;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);width:90%;text-align:center}h1.svelte-1rb047f{height:max-content;font-size:5.5vmax;font-family:Roboto, Helvetica, sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;color:transparent;-webkit-text-fill-color:transparent;background:center\n			linear-gradient(\n				to right,\n				var(--shadow-color) 0%,\n				var(--header-color) 50%,\n				var(--header-color) 60%,\n				var(--shadow-color) 100%\n			);background-size:60%;background-clip:text;-webkit-background-clip:text;animation:svelte-1rb047f-shimmer 4s linear infinite alternate;-webkit-animation:svelte-1rb047f-shimmer 4s linear infinite alternate}@keyframes svelte-1rb047f-shimmer{0%{background-position:left}80%{background-position:left}100%{background-position:right}}@media only screen and (max-width: 600px){.title-bar.svelte-1rb047f{top:7vh;min-height:15vh}h1.svelte-1rb047f{font-size:3em;text-align:center;letter-spacing:normal}}",
-  map: '{"version":3,"file":"SubPageTitleBar.svelte","sources":["SubPageTitleBar.svelte"],"sourcesContent":["<script lang=\\"ts\\">export let title;\\nexport let colorVar;\\nexport let textColor;\\n<\/script>\\n\\n<div class=\\"title-bar\\" style=\\"background-color: {colorVar}\\">\\n\\t<header class=\\"header\\">\\n\\t\\t<h1 style=\\"--header-color: {textColor};\\">\\n\\t\\t\\t{title}\\n\\t\\t</h1>\\n\\t</header>\\n</div>\\n\\n<style>\\n\\t.title-bar {\\n\\t\\tposition: sticky;\\n\\t\\ttop: 7vh;\\n\\t\\tmargin: 30px auto;\\n\\t\\tdisplay: flex;\\n\\t\\tjustify-content: center;\\n\\t\\talign-content: center;\\n\\t\\tz-index: 1;\\n\\t\\tmin-height: 10vh;\\n\\t}\\n\\t.header {\\n\\t\\tmargin-top: 0px;\\n\\t\\tposition: absolute;\\n\\t\\ttop: 50%;\\n\\t\\tleft: 50%;\\n\\t\\ttransform: translate(-50%, -50%);\\n\\t\\twidth: 90%;\\n\\t\\ttext-align: center;\\n\\t}\\n\\th1 {\\n\\t\\theight: max-content;\\n\\t\\tfont-size: 5.5vmax;\\n\\t\\tfont-family: Roboto, Helvetica, sans-serif;\\n\\t\\tfont-weight: 700;\\n\\t\\ttext-transform: uppercase;\\n\\t\\tletter-spacing: 0.2em;\\n\\t\\tcolor: transparent;\\n\\t\\t-webkit-text-fill-color: transparent;\\n\\t\\tbackground: center\\n\\t\\t\\tlinear-gradient(\\n\\t\\t\\t\\tto right,\\n\\t\\t\\t\\tvar(--shadow-color) 0%,\\n\\t\\t\\t\\tvar(--header-color) 50%,\\n\\t\\t\\t\\tvar(--header-color) 60%,\\n\\t\\t\\t\\tvar(--shadow-color) 100%\\n\\t\\t\\t);\\n\\t\\tbackground-size: 60%;\\n\\t\\tbackground-clip: text;\\n\\t\\t-webkit-background-clip: text;\\n\\t\\tanimation: shimmer 4s linear infinite alternate;\\n\\t\\t-webkit-animation: shimmer 4s linear infinite alternate;\\n\\t}\\n\\n\\t@keyframes shimmer {\\n\\t\\t0% {\\n\\t\\t\\tbackground-position: left;\\n\\t\\t}\\n\\t\\t80% {\\n\\t\\t\\tbackground-position: left;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\tbackground-position: right;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 600px) {\\n\\t\\t.title-bar {\\n\\t\\t\\ttop: 7vh;\\n\\t\\t\\tmin-height: 15vh;\\n\\t\\t}\\n\\t\\th1 {\\n\\t\\t\\tfont-size: 3em;\\n\\t\\t\\ttext-align: center;\\n\\t\\t\\tletter-spacing: normal;\\n\\t\\t}\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAcC,UAAU,eAAC,CAAC,AACX,QAAQ,CAAE,MAAM,CAChB,GAAG,CAAE,GAAG,CACR,MAAM,CAAE,IAAI,CAAC,IAAI,CACjB,OAAO,CAAE,IAAI,CACb,eAAe,CAAE,MAAM,CACvB,aAAa,CAAE,MAAM,CACrB,OAAO,CAAE,CAAC,CACV,UAAU,CAAE,IAAI,AACjB,CAAC,AACD,OAAO,eAAC,CAAC,AACR,UAAU,CAAE,GAAG,CACf,QAAQ,CAAE,QAAQ,CAClB,GAAG,CAAE,GAAG,CACR,IAAI,CAAE,GAAG,CACT,SAAS,CAAE,UAAU,IAAI,CAAC,CAAC,IAAI,CAAC,CAChC,KAAK,CAAE,GAAG,CACV,UAAU,CAAE,MAAM,AACnB,CAAC,AACD,EAAE,eAAC,CAAC,AACH,MAAM,CAAE,WAAW,CACnB,SAAS,CAAE,OAAO,CAClB,WAAW,CAAE,MAAM,CAAC,CAAC,SAAS,CAAC,CAAC,UAAU,CAC1C,WAAW,CAAE,GAAG,CAChB,cAAc,CAAE,SAAS,CACzB,cAAc,CAAE,KAAK,CACrB,KAAK,CAAE,WAAW,CAClB,uBAAuB,CAAE,WAAW,CACpC,UAAU,CAAE,MAAM;GACjB;IACC,EAAE,CAAC,KAAK,CAAC;IACT,IAAI,cAAc,CAAC,CAAC,EAAE,CAAC;IACvB,IAAI,cAAc,CAAC,CAAC,GAAG,CAAC;IACxB,IAAI,cAAc,CAAC,CAAC,GAAG,CAAC;IACxB,IAAI,cAAc,CAAC,CAAC,IAAI;IACxB,CACF,eAAe,CAAE,GAAG,CACpB,eAAe,CAAE,IAAI,CACrB,uBAAuB,CAAE,IAAI,CAC7B,SAAS,CAAE,sBAAO,CAAC,EAAE,CAAC,MAAM,CAAC,QAAQ,CAAC,SAAS,CAC/C,iBAAiB,CAAE,sBAAO,CAAC,EAAE,CAAC,MAAM,CAAC,QAAQ,CAAC,SAAS,AACxD,CAAC,AAED,WAAW,sBAAQ,CAAC,AACnB,EAAE,AAAC,CAAC,AACH,mBAAmB,CAAE,IAAI,AAC1B,CAAC,AACD,GAAG,AAAC,CAAC,AACJ,mBAAmB,CAAE,IAAI,AAC1B,CAAC,AACD,IAAI,AAAC,CAAC,AACL,mBAAmB,CAAE,KAAK,AAC3B,CAAC,AACF,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,KAAK,CAAC,AAAC,CAAC,AAC1C,UAAU,eAAC,CAAC,AACX,GAAG,CAAE,GAAG,CACR,UAAU,CAAE,IAAI,AACjB,CAAC,AACD,EAAE,eAAC,CAAC,AACH,SAAS,CAAE,GAAG,CACd,UAAU,CAAE,MAAM,CAClB,cAAc,CAAE,MAAM,AACvB,CAAC,AACF,CAAC"}'
-};
-var SubPageTitleBar = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let { title } = $$props;
-  let { colorVar } = $$props;
-  let { textColor } = $$props;
-  if ($$props.title === void 0 && $$bindings.title && title !== void 0)
-    $$bindings.title(title);
-  if ($$props.colorVar === void 0 && $$bindings.colorVar && colorVar !== void 0)
-    $$bindings.colorVar(colorVar);
-  if ($$props.textColor === void 0 && $$bindings.textColor && textColor !== void 0)
-    $$bindings.textColor(textColor);
-  $$result.css.add(css$d);
-  return `<div class="${"title-bar svelte-1rb047f"}" style="${"background-color: " + escape(colorVar)}"><header class="${"header svelte-1rb047f"}"><h1 style="${"--header-color: " + escape(textColor) + ";"}" class="${"svelte-1rb047f"}">${escape(title)}</h1></header>
-</div>`;
-});
-var css$c = {
-  code: ".container.svelte-jbbb8d{display:flex;flex-direction:column;cursor:pointer}.perspective.svelte-jbbb8d{transform-style:preserve-3d;position:absolute;top:44%;left:44%;transform:translate3d(-50%, -50%, 0);pointer-events:none}.text.svelte-jbbb8d{font-size:1.5em;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;backface-visibility:hidden;transform:preserve-3d;margin:0px auto;text-align:center;pointer-events:none}.text.svelte-jbbb8d span{position:absolute;text-transform:uppercase;-webkit-backface-visibility:hidden;-moz-backface-visibility:hidden;backface-visibility:hidden;top:0;left:0;width:45px;text-align:center;transform-origin:center;transform-style:preserve-3d;transform:rotateY(\n				calc(var(--degOff) + calc(var(--rot-posit) * calc(var(--spread) / var(--totalLetters))))\n			)\n			translateZ(200px)}.card-sm.svelte-jbbb8d{position:relative;width:300px;height:300px;padding:10px;margin-bottom:60px;display:flex;justify-content:center;align-items:center;text-align:center;font-size:1.3em;border-radius:50%;box-shadow:inset 0px 0px 380px var(--orange), inset 0px 5px 60px rgb(10, 10, 10);cursor:pointer;z-index:0;pointer-events:none}.card-sm.svelte-jbbb8d::after{content:'';width:5px;height:5px;background-color:#444444;border-radius:50%;display:block;position:absolute;bottom:-50px;transform:rotate3d(1, 0, 0, 80deg);-webkit-box-shadow:0px 0px 100px 2px #444444;-moz-box-shadow:0px 0px 8px 2px #444444;box-shadow:0px 0px 100px 100px #444444;pointer-events:none}.details.svelte-jbbb8d{color:var(--orange);border:solid 2px var(--orange)}.muted.svelte-jbbb8d{filter:opacity(0.5) grayscale(0.4);transform:scale(0.7)}",
-  map: `{"version":3,"file":"GlobeText.svelte","sources":["GlobeText.svelte"],"sourcesContent":["<script lang=\\"ts\\">let deg = 0;\\nlet rotationSpeed;\\nlet globe;\\nexport let totalTitleLetters;\\nexport let spread;\\nexport let route;\\n// Updates the central degree for text 360deg rotation.\\nconst updateDeg = () => {\\n    rotationSpeed = setInterval(() => {\\n        if (deg < 360)\\n            return (deg += 1);\\n        return clearInterval(rotationSpeed);\\n    }, 1);\\n};\\n//focuses the globe\\nconst unmute = () => {\\n    if (!globe.classList.contains('muted'))\\n        return;\\n    globe.classList.remove('muted');\\n    deg = 0;\\n    updateDeg();\\n};\\n//Removes focus from the globe\\nconst mute = () => {\\n    if (globe.classList.contains('muted'))\\n        return;\\n    globe.classList.add('muted');\\n    clearInterval(rotationSpeed);\\n    deg = 0;\\n};\\n<\/script>\\n\\n<div\\n\\tclass=\\"container muted\\"\\n\\tbind:this={globe}\\n\\ton:mouseover={unmute}\\n\\ton:focus={unmute}\\n\\ton:blur={mute}\\n\\ton:mouseout={mute}\\n>\\n\\t<div class=\\"card-sm\\">\\n\\t\\t<div class=\\"perspective\\">\\n\\t\\t\\t<h1\\n\\t\\t\\t\\tclass=\\"text\\"\\n\\t\\t\\t\\tstyle=\\"--degOff:-{deg}deg; --totalLetters:{totalTitleLetters}; --spread: {spread}deg;\\"\\n\\t\\t\\t>\\n\\t\\t\\t\\t<slot name=\\"title\\" />\\n\\t\\t\\t</h1>\\n\\t\\t</div>\\n\\t</div>\\n\\t<a class=\\"btn btn-main details\\" href={route}>details</a>\\n</div>\\n\\n<style>\\n\\t.container {\\n\\t\\tdisplay: flex;\\n\\t\\tflex-direction: column;\\n\\t\\tcursor: pointer;\\n\\t}\\n\\t.perspective {\\n\\t\\ttransform-style: preserve-3d;\\n\\t\\tposition: absolute;\\n\\t\\ttop: 44%;\\n\\t\\tleft: 44%;\\n\\t\\ttransform: translate3d(-50%, -50%, 0);\\n\\t\\tpointer-events: none;\\n\\t}\\n\\n\\t.text {\\n\\t\\tfont-size: 1.5em;\\n\\t\\t-webkit-backface-visibility: hidden;\\n\\t\\t-moz-backface-visibility: hidden;\\n\\t\\tbackface-visibility: hidden;\\n\\t\\ttransform: preserve-3d;\\n\\t\\tmargin: 0px auto;\\n\\t\\ttext-align: center;\\n\\t\\tpointer-events: none;\\n\\t}\\n\\t.text :global(span) {\\n\\t\\tposition: absolute;\\n\\t\\ttext-transform: uppercase;\\n\\t\\t-webkit-backface-visibility: hidden;\\n\\t\\t-moz-backface-visibility: hidden;\\n\\t\\tbackface-visibility: hidden;\\n\\t\\ttop: 0;\\n\\t\\tleft: 0;\\n\\t\\twidth: 45px;\\n\\t\\ttext-align: center;\\n\\t\\ttransform-origin: center;\\n\\t\\ttransform-style: preserve-3d;\\n\\t\\ttransform: rotateY(\\n\\t\\t\\t\\tcalc(var(--degOff) + calc(var(--rot-posit) * calc(var(--spread) / var(--totalLetters))))\\n\\t\\t\\t)\\n\\t\\t\\ttranslateZ(200px);\\n\\t}\\n\\n\\t.card-sm {\\n\\t\\tposition: relative;\\n\\t\\twidth: 300px;\\n\\t\\theight: 300px;\\n\\t\\tpadding: 10px;\\n\\t\\tmargin-bottom: 60px;\\n\\t\\tdisplay: flex;\\n\\t\\tjustify-content: center;\\n\\t\\talign-items: center;\\n\\t\\ttext-align: center;\\n\\t\\tfont-size: 1.3em;\\n\\t\\tborder-radius: 50%;\\n\\t\\tbox-shadow: inset 0px 0px 380px var(--orange), inset 0px 5px 60px rgb(10, 10, 10);\\n\\t\\tcursor: pointer;\\n\\t\\tz-index: 0;\\n\\t\\tpointer-events: none;\\n\\t}\\n\\t.card-sm::after {\\n\\t\\tcontent: '';\\n\\t\\twidth: 5px;\\n\\t\\theight: 5px;\\n\\t\\tbackground-color: #444444;\\n\\t\\tborder-radius: 50%;\\n\\t\\tdisplay: block;\\n\\t\\tposition: absolute;\\n\\t\\tbottom: -50px;\\n\\t\\ttransform: rotate3d(1, 0, 0, 80deg);\\n\\t\\t-webkit-box-shadow: 0px 0px 100px 2px #444444;\\n\\t\\t-moz-box-shadow: 0px 0px 8px 2px #444444;\\n\\t\\tbox-shadow: 0px 0px 100px 100px #444444;\\n\\t\\tpointer-events: none;\\n\\t}\\n\\t.details {\\n\\t\\tcolor: var(--orange);\\n\\t\\tborder: solid 2px var(--orange);\\n\\t}\\n\\t.muted {\\n\\t\\tfilter: opacity(0.5) grayscale(0.4);\\n\\t\\ttransform: scale(0.7);\\n\\t}\\n</style>\\n"],"names":[],"mappings":"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"}`
-};
-var GlobeText = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let deg = 0;
-  let globe;
-  let { totalTitleLetters } = $$props;
-  let { spread } = $$props;
-  let { route } = $$props;
-  if ($$props.totalTitleLetters === void 0 && $$bindings.totalTitleLetters && totalTitleLetters !== void 0)
-    $$bindings.totalTitleLetters(totalTitleLetters);
-  if ($$props.spread === void 0 && $$bindings.spread && spread !== void 0)
-    $$bindings.spread(spread);
-  if ($$props.route === void 0 && $$bindings.route && route !== void 0)
-    $$bindings.route(route);
-  $$result.css.add(css$c);
-  return `<div class="${"container muted svelte-jbbb8d"}"${add_attribute("this", globe, 0)}><div class="${"card-sm svelte-jbbb8d"}"><div class="${"perspective svelte-jbbb8d"}"><h1 class="${"text svelte-jbbb8d"}" style="${"--degOff:-" + escape(deg) + "deg; --totalLetters:" + escape(totalTitleLetters) + "; --spread: " + escape(spread) + "deg;"}">${slots.title ? slots.title({}) : ``}</h1></div></div>
-	<a class="${"btn btn-main details svelte-jbbb8d"}"${add_attribute("href", route, 0)}>details</a>
-</div>`;
-});
-var GlobeText$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": GlobeText
-});
-var css$b = {
-  code: ".card-container.svelte-1dznal4{display:flex;flex-wrap:wrap;align-content:center;justify-content:center;width:100%;margin:10px auto 10px auto}.center-text.svelte-1dznal4{text-align:center;padding:15px;font-weight:400;font-size:1.5em}",
-  map: `{"version":3,"file":"ExperienceHeader.svelte","sources":["ExperienceHeader.svelte"],"sourcesContent":["<script lang=\\"ts\\">import { fly, fade } from 'svelte/transition';\\nimport SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';\\nimport GlobeText from './GlobeText.svelte';\\n<\/script>\\n\\n<div in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>\\n\\t<SubPageTitleBar title={'experience'} colorVar={'white'} textColor={'rgb(238, 174, 37)'} />\\n\\t<div class=\\"container-border\\">\\n\\t\\t<div class=\\"card-container\\">\\n\\t\\t\\t<div class=\\"one\\">\\n\\t\\t\\t\\t<!-- This is a component load for the globe animations -->\\n\\t\\t\\t\\t<GlobeText totalTitleLetters={7} spread={50} route={'#general'}>\\n\\t\\t\\t\\t\\t<span slot=\\"title\\">\\n\\t\\t\\t\\t\\t\\t<!--  Note the span with slot name It identifies which slot -->\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-3;\\">g</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-2;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-1;\\">n</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:0;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:1;\\">r</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:2;\\">a</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:3;\\">l</span>\\n\\t\\t\\t\\t\\t</span>\\n\\t\\t\\t\\t</GlobeText>\\n\\t\\t\\t\\t<!-- End of the first globe animation -->\\n\\t\\t\\t</div>\\n\\t\\t\\t<div class=\\"two\\">\\n\\t\\t\\t\\t<!--  The route should mirror the div ID that you want the scroll to go to in globeText -->\\n\\t\\t\\t\\t<GlobeText totalTitleLetters={14} spread={110} route={'#network-security'}>\\n\\t\\t\\t\\t\\t<span slot=\\"title\\">\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-6;\\">c</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-5;\\">y</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-4;\\">b</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-3;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-2;\\">r</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-1;\\" />\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:0;\\">s</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:1;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:2;\\">c</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:3;\\">u</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:4;\\">r</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:5;\\">i</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:6;\\">t</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:7;\\">y</span>\\n\\t\\t\\t\\t\\t</span>\\n\\t\\t\\t\\t</GlobeText>\\n\\t\\t\\t</div>\\n\\t\\t\\t<div class=\\"three\\">\\n\\t\\t\\t\\t<GlobeText totalTitleLetters={15} spread={100} route={'#web-development'}>\\n\\t\\t\\t\\t\\t<span slot=\\"title\\">\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-7;\\">w</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-6;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-5;\\">b</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-4;\\" />\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-3;\\">d</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-2;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-1;\\">v</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:0;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:1;\\">l</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:2;\\">o</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:3;\\">p</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:4;\\">m</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:5;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:6;\\">n</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:7;\\">t</span>\\n\\t\\t\\t\\t\\t</span>\\n\\t\\t\\t\\t</GlobeText>\\n\\t\\t\\t</div>\\n\\t\\t\\t<div class=\\"four\\">\\n\\t\\t\\t\\t<GlobeText totalTitleLetters={19} spread={120} route={'#security-management'}>\\n\\t\\t\\t\\t\\t<span slot=\\"title\\">\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-9;\\">s</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-8;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-7;\\">c</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-6;\\">u</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-5;\\">r</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-4;\\">i</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-3;\\">t</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-2;\\">y</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-1;\\" />\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:0;\\">m</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:1;\\">a</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:2;\\">n</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:3;\\">a</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:4;\\">g</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:5;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:6;\\">m</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:7;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:8;\\">n</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:9;\\">t</span>\\n\\t\\t\\t\\t\\t</span>\\n\\t\\t\\t\\t</GlobeText>\\n\\t\\t\\t</div>\\n\\t\\t\\t<div class=\\"five\\">\\n\\t\\t\\t\\t<GlobeText totalTitleLetters={9} spread={60} route={'#education'}>\\n\\t\\t\\t\\t\\t<span slot=\\"title\\">\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-5;\\">c</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-4;\\">r</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-3;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-2;\\">d</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:-1;\\">e</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:0;\\">n</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:1;\\">t</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:2;\\">i</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:3;\\">a</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:4;\\">l</span>\\n\\t\\t\\t\\t\\t\\t<span style=\\"--rot-posit:5;\\">s</span>\\n\\t\\t\\t\\t\\t</span>\\n\\t\\t\\t\\t</GlobeText>\\n\\t\\t\\t</div>\\n\\t\\t</div>\\n\\t\\t<p class=\\"center-text\\">\\n\\t\\t\\t<em>You can also check out my social media links at the bottom of this page.</em>\\n\\t\\t</p>\\n\\t</div>\\n</div>\\n\\n<style>\\n\\t.card-container {\\n\\t\\tdisplay: flex;\\n\\t\\tflex-wrap: wrap;\\n\\t\\talign-content: center;\\n\\t\\tjustify-content: center;\\n\\t\\twidth: 100%;\\n\\t\\tmargin: 10px auto 10px auto;\\n\\t}\\n\\n\\t.center-text {\\n\\t\\ttext-align: center;\\n\\t\\tpadding: 15px;\\n\\t\\tfont-weight: 400;\\n\\t\\tfont-size: 1.5em;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAqHC,eAAe,eAAC,CAAC,AAChB,OAAO,CAAE,IAAI,CACb,SAAS,CAAE,IAAI,CACf,aAAa,CAAE,MAAM,CACrB,eAAe,CAAE,MAAM,CACvB,KAAK,CAAE,IAAI,CACX,MAAM,CAAE,IAAI,CAAC,IAAI,CAAC,IAAI,CAAC,IAAI,AAC5B,CAAC,AAED,YAAY,eAAC,CAAC,AACb,UAAU,CAAE,MAAM,CAClB,OAAO,CAAE,IAAI,CACb,WAAW,CAAE,GAAG,CAChB,SAAS,CAAE,KAAK,AACjB,CAAC"}`
-};
-var ExperienceHeader = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$b);
-  return `<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "experience",
-    colorVar: "white",
-    textColor: "rgb(238, 174, 37)"
-  }, {}, {})}
-	<div class="${"container-border"}"><div class="${"card-container svelte-1dznal4"}"><div class="${"one"}">
-				${validate_component(GlobeText, "GlobeText").$$render($$result, {
-    totalTitleLetters: 7,
-    spread: 50,
-    route: "#general"
-  }, {}, {
-    title: () => `<span slot="${"title"}">
-						<span style="${"--rot-posit:-3;"}">g</span>
-						<span style="${"--rot-posit:-2;"}">e</span>
-						<span style="${"--rot-posit:-1;"}">n</span>
-						<span style="${"--rot-posit:0;"}">e</span>
-						<span style="${"--rot-posit:1;"}">r</span>
-						<span style="${"--rot-posit:2;"}">a</span>
-						<span style="${"--rot-posit:3;"}">l</span></span>`
-  })}
-				</div>
-			<div class="${"two"}">
-				${validate_component(GlobeText, "GlobeText").$$render($$result, {
-    totalTitleLetters: 14,
-    spread: 110,
-    route: "#network-security"
-  }, {}, {
-    title: () => `<span slot="${"title"}"><span style="${"--rot-posit:-6;"}">c</span>
-						<span style="${"--rot-posit:-5;"}">y</span>
-						<span style="${"--rot-posit:-4;"}">b</span>
-						<span style="${"--rot-posit:-3;"}">e</span>
-						<span style="${"--rot-posit:-2;"}">r</span>
-						<span style="${"--rot-posit:-1;"}"></span>
-						<span style="${"--rot-posit:0;"}">s</span>
-						<span style="${"--rot-posit:1;"}">e</span>
-						<span style="${"--rot-posit:2;"}">c</span>
-						<span style="${"--rot-posit:3;"}">u</span>
-						<span style="${"--rot-posit:4;"}">r</span>
-						<span style="${"--rot-posit:5;"}">i</span>
-						<span style="${"--rot-posit:6;"}">t</span>
-						<span style="${"--rot-posit:7;"}">y</span></span>`
-  })}</div>
-			<div class="${"three"}">${validate_component(GlobeText, "GlobeText").$$render($$result, {
-    totalTitleLetters: 15,
-    spread: 100,
-    route: "#web-development"
-  }, {}, {
-    title: () => `<span slot="${"title"}"><span style="${"--rot-posit:-7;"}">w</span>
-						<span style="${"--rot-posit:-6;"}">e</span>
-						<span style="${"--rot-posit:-5;"}">b</span>
-						<span style="${"--rot-posit:-4;"}"></span>
-						<span style="${"--rot-posit:-3;"}">d</span>
-						<span style="${"--rot-posit:-2;"}">e</span>
-						<span style="${"--rot-posit:-1;"}">v</span>
-						<span style="${"--rot-posit:0;"}">e</span>
-						<span style="${"--rot-posit:1;"}">l</span>
-						<span style="${"--rot-posit:2;"}">o</span>
-						<span style="${"--rot-posit:3;"}">p</span>
-						<span style="${"--rot-posit:4;"}">m</span>
-						<span style="${"--rot-posit:5;"}">e</span>
-						<span style="${"--rot-posit:6;"}">n</span>
-						<span style="${"--rot-posit:7;"}">t</span></span>`
-  })}</div>
-			<div class="${"four"}">${validate_component(GlobeText, "GlobeText").$$render($$result, {
-    totalTitleLetters: 19,
-    spread: 120,
-    route: "#security-management"
-  }, {}, {
-    title: () => `<span slot="${"title"}"><span style="${"--rot-posit:-9;"}">s</span>
-						<span style="${"--rot-posit:-8;"}">e</span>
-						<span style="${"--rot-posit:-7;"}">c</span>
-						<span style="${"--rot-posit:-6;"}">u</span>
-						<span style="${"--rot-posit:-5;"}">r</span>
-						<span style="${"--rot-posit:-4;"}">i</span>
-						<span style="${"--rot-posit:-3;"}">t</span>
-						<span style="${"--rot-posit:-2;"}">y</span>
-						<span style="${"--rot-posit:-1;"}"></span>
-						<span style="${"--rot-posit:0;"}">m</span>
-						<span style="${"--rot-posit:1;"}">a</span>
-						<span style="${"--rot-posit:2;"}">n</span>
-						<span style="${"--rot-posit:3;"}">a</span>
-						<span style="${"--rot-posit:4;"}">g</span>
-						<span style="${"--rot-posit:5;"}">e</span>
-						<span style="${"--rot-posit:6;"}">m</span>
-						<span style="${"--rot-posit:7;"}">e</span>
-						<span style="${"--rot-posit:8;"}">n</span>
-						<span style="${"--rot-posit:9;"}">t</span></span>`
-  })}</div>
-			<div class="${"five"}">${validate_component(GlobeText, "GlobeText").$$render($$result, {
-    totalTitleLetters: 9,
-    spread: 60,
-    route: "#education"
-  }, {}, {
-    title: () => `<span slot="${"title"}"><span style="${"--rot-posit:-5;"}">c</span>
-						<span style="${"--rot-posit:-4;"}">r</span>
-						<span style="${"--rot-posit:-3;"}">e</span>
-						<span style="${"--rot-posit:-2;"}">d</span>
-						<span style="${"--rot-posit:-1;"}">e</span>
-						<span style="${"--rot-posit:0;"}">n</span>
-						<span style="${"--rot-posit:1;"}">t</span>
-						<span style="${"--rot-posit:2;"}">i</span>
-						<span style="${"--rot-posit:3;"}">a</span>
-						<span style="${"--rot-posit:4;"}">l</span>
-						<span style="${"--rot-posit:5;"}">s</span></span>`
-  })}</div></div>
-		<p class="${"center-text svelte-1dznal4"}"><em>You can also check out my social media links at the bottom of this page.</em></p></div>
-</div>`;
-});
-var ExperienceHeader$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": ExperienceHeader
-});
-var css$a = {
-  code: ".layout-container.svelte-1j2vmps{min-height:90vh;width:100%}",
-  map: `{"version":3,"file":"__layout.svelte","sources":["__layout.svelte"],"sourcesContent":["<script>\\n\\timport ExperienceHeader from './experienceComponents/ExperienceHeader.svelte';\\n<\/script>\\n\\n<ExperienceHeader />\\n<div class=\\"layout-container\\">\\n\\t<slot />\\n</div>\\n\\n<style>\\n\\t.layout-container {\\n\\t\\tmin-height: 90vh;\\n\\t\\twidth: 100%;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAUC,iBAAiB,eAAC,CAAC,AAClB,UAAU,CAAE,IAAI,CAChB,KAAK,CAAE,IAAI,AACZ,CAAC"}`
-};
-var _layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$a);
-  return `${validate_component(ExperienceHeader, "ExperienceHeader").$$render($$result, {}, {}, {})}
-<div class="${"layout-container svelte-1j2vmps"}">${slots.default ? slots.default({}) : ``}
-</div>`;
-});
-var __layout = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": _layout
-});
-var css$9 = {
-  code: ".container.svelte-1jllv94{position:relative;display:grid;place-items:center;grid-template-areas:'text text image'\n			'. scroll-btn .';min-height:70vh;margin:20px auto 0px auto;padding:2em}.scroll-btn.svelte-1jllv94{grid-area:scroll-btn}.image{grid-area:image;height:25vmax;width:40vmax;margin:20px;border-radius:0.9em;box-shadow:inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text);background-position:center}.default-image.svelte-1jllv94{background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)), no-repeat}.content.svelte-1jllv94{grid-area:text;width:clamp(400px, 100%, 900px);font-size:1.5em;padding:10px}.experience-p,.experience-strong,.experience-a,.experience-li{margin:40px auto 40px auto;color:var(--experience-text)}.experience-h2{font-size:1.3em}.experience-p,.experience-strong{line-height:2em}@media only screen and (max-width: 1500px){.container.svelte-1jllv94{grid-template-areas:'image'\n				'text'\n				'scroll-btn';padding:5px}.image{height:50vmax;width:90vmax}.content.svelte-1jllv94{width:90%}}@media only screen and (max-width: 850px){.image{height:25vmax;width:50vmax}.image>p{font-size:2em}}",
-  map: `{"version":3,"file":"ExperienceStyles.svelte","sources":["ExperienceStyles.svelte"],"sourcesContent":["<script>\\n\\tconst scrollTop = () => {\\n\\t\\twindow.scrollTo(0, 0);\\n\\t};\\n<\/script>\\n\\n<div class=\\"container\\">\\n\\t<slot name=\\"image\\">\\n\\t\\t<div class=\\"image default-image\\">No content</div>\\n\\t</slot>\\n\\n\\t<div class=\\"content\\">\\n\\t\\t<slot name=\\"content\\">\\n\\t\\t\\t<div class=\\"content\\">nothing to show</div>\\n\\t\\t</slot>\\n\\t</div>\\n\\t<button class=\\"btn btn-main btn-center scroll-btn\\" on:click={scrollTop}>Scroll Top</button>\\n</div>\\n\\n<!-- Update the global style items tomorrow because the current system acting as global css.-->\\n<style>\\n\\t.container {\\n\\t\\tposition: relative;\\n\\t\\tdisplay: grid;\\n\\t\\tplace-items: center;\\n\\t\\tgrid-template-areas:\\n\\t\\t\\t'text text image'\\n\\t\\t\\t'. scroll-btn .';\\n\\t\\tmin-height: 70vh;\\n\\t\\tmargin: 20px auto 0px auto;\\n\\t\\tpadding: 2em;\\n\\t}\\n\\t.scroll-btn {\\n\\t\\tgrid-area: scroll-btn;\\n\\t}\\n\\n\\t:global(.image) {\\n\\t\\tgrid-area: image;\\n\\t\\theight: 25vmax;\\n\\t\\twidth: 40vmax;\\n\\t\\tmargin: 20px;\\n\\t\\tborder-radius: 0.9em;\\n\\t\\tbox-shadow: inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text);\\n\\t\\tbackground-position: center;\\n\\t}\\n\\n\\t.default-image {\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)), no-repeat;\\n\\t}\\n\\n\\t.content {\\n\\t\\tgrid-area: text;\\n\\t\\twidth: clamp(400px, 100%, 900px);\\n\\t\\tfont-size: 1.5em;\\n\\t\\tpadding: 10px;\\n\\t}\\n\\t:global(.experience-p),\\n\\t:global(.experience-strong),\\n\\t:global(.experience-a),\\n\\t:global(.experience-li) {\\n\\t\\tmargin: 40px auto 40px auto;\\n\\t\\tcolor: var(--experience-text);\\n\\t}\\n\\t:global(.experience-h2) {\\n\\t\\tfont-size: 1.3em;\\n\\t}\\n\\n\\t:global(.experience-p),\\n\\t:global(.experience-strong) {\\n\\t\\tline-height: 2em;\\n\\t}\\n\\n\\t@media only screen and (max-width: 1500px) {\\n\\t\\t.container {\\n\\t\\t\\tgrid-template-areas:\\n\\t\\t\\t\\t'image'\\n\\t\\t\\t\\t'text'\\n\\t\\t\\t\\t'scroll-btn';\\n\\t\\t\\tpadding: 5px;\\n\\t\\t}\\n\\t\\t:global(.image) {\\n\\t\\t\\theight: 50vmax;\\n\\t\\t\\twidth: 90vmax;\\n\\t\\t}\\n\\t\\t.content {\\n\\t\\t\\twidth: 90%;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 850px) {\\n\\t\\t:global(.image) {\\n\\t\\t\\theight: 25vmax;\\n\\t\\t\\twidth: 50vmax;\\n\\t\\t}\\n\\t\\t:global(.image) > :global(p) {\\n\\t\\t\\tfont-size: 2em;\\n\\t\\t}\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAqBC,UAAU,eAAC,CAAC,AACX,QAAQ,CAAE,QAAQ,CAClB,OAAO,CAAE,IAAI,CACb,WAAW,CAAE,MAAM,CACnB,mBAAmB,CAClB,iBAAiB;GACjB,gBAAgB,CACjB,UAAU,CAAE,IAAI,CAChB,MAAM,CAAE,IAAI,CAAC,IAAI,CAAC,GAAG,CAAC,IAAI,CAC1B,OAAO,CAAE,GAAG,AACb,CAAC,AACD,WAAW,eAAC,CAAC,AACZ,SAAS,CAAE,UAAU,AACtB,CAAC,AAEO,MAAM,AAAE,CAAC,AAChB,SAAS,CAAE,KAAK,CAChB,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,CACb,MAAM,CAAE,IAAI,CACZ,aAAa,CAAE,KAAK,CACpB,UAAU,CAAE,KAAK,CAAC,CAAC,CAAC,CAAC,CAAC,IAAI,CAAC,IAAI,cAAc,CAAC,CAAC,CAAC,GAAG,CAAC,IAAI,CAAC,IAAI,CAAC,IAAI,iBAAiB,CAAC,CACpF,mBAAmB,CAAE,MAAM,AAC5B,CAAC,AAED,cAAc,eAAC,CAAC,AACf,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,CAAC,SAAS,AACzF,CAAC,AAED,QAAQ,eAAC,CAAC,AACT,SAAS,CAAE,IAAI,CACf,KAAK,CAAE,MAAM,KAAK,CAAC,CAAC,IAAI,CAAC,CAAC,KAAK,CAAC,CAChC,SAAS,CAAE,KAAK,CAChB,OAAO,CAAE,IAAI,AACd,CAAC,AACO,aAAa,AAAC,CACd,kBAAkB,AAAC,CACnB,aAAa,AAAC,CACd,cAAc,AAAE,CAAC,AACxB,MAAM,CAAE,IAAI,CAAC,IAAI,CAAC,IAAI,CAAC,IAAI,CAC3B,KAAK,CAAE,IAAI,iBAAiB,CAAC,AAC9B,CAAC,AACO,cAAc,AAAE,CAAC,AACxB,SAAS,CAAE,KAAK,AACjB,CAAC,AAEO,aAAa,AAAC,CACd,kBAAkB,AAAE,CAAC,AAC5B,WAAW,CAAE,GAAG,AACjB,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,MAAM,CAAC,AAAC,CAAC,AAC3C,UAAU,eAAC,CAAC,AACX,mBAAmB,CAClB,OAAO;IACP,MAAM;IACN,YAAY,CACb,OAAO,CAAE,GAAG,AACb,CAAC,AACO,MAAM,AAAE,CAAC,AAChB,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,AACd,CAAC,AACD,QAAQ,eAAC,CAAC,AACT,KAAK,CAAE,GAAG,AACX,CAAC,AACF,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,KAAK,CAAC,AAAC,CAAC,AAClC,MAAM,AAAE,CAAC,AAChB,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,AACd,CAAC,AACO,MAAM,AAAC,CAAW,CAAC,AAAE,CAAC,AAC7B,SAAS,CAAE,GAAG,AACf,CAAC,AACF,CAAC"}`
-};
-var ExperienceStyles = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$9);
-  return `<div class="${"container svelte-1jllv94"}">${slots.image ? slots.image({}) : `
-		<div class="${"image default-image svelte-1jllv94"}">No content</div>
-	`}
-
-	<div class="${"content svelte-1jllv94"}">${slots.content ? slots.content({}) : `
-			<div class="${"content svelte-1jllv94"}">nothing to show</div>
-		`}</div>
-	<button class="${"btn btn-main btn-center scroll-btn svelte-1jllv94"}">Scroll Top</button></div>
-
-`;
-});
-var ExperienceStyles$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": ExperienceStyles
-});
-var css$8 = {
-  code: ".general-image.svelte-2lrwj8{background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/geo_at_sea.jpeg') no-repeat;background-size:cover}",
-  map: `{"version":3,"file":"GeneralContent.svelte","sources":["GeneralContent.svelte"],"sourcesContent":["<script>\\n\\timport SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';\\n\\timport ExperienceStyles from './ExperienceStyles.svelte';\\n<\/script>\\n\\n<div id=\\"general\\">\\n\\t<SubPageTitleBar title={'General'} colorVar={'white'} textColor={'rgb(238, 174, 37)'} />\\n\\t<ExperienceStyles>\\n\\t\\t<span slot=\\"image\\">\\n\\t\\t\\t<div class=\\"general-image image\\" />\\n\\t\\t</span>\\n\\t\\t<span slot=\\"content\\">\\n\\t\\t\\t<div>\\n\\t\\t\\t\\t<h2 class=\\"experience-h2\\">\\n\\t\\t\\t\\t\\t<strong class=\\"experience-strong\\"\\n\\t\\t\\t\\t\\t\\t>More than two decades of professional experience in the US Navy:</strong\\n\\t\\t\\t\\t\\t>\\n\\t\\t\\t\\t</h2>\\n\\t\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\t\\tThe first 16 years I was enlisted, spending seven as a division level manager (Chief Petty\\n\\t\\t\\t\\t\\tOfficer) where I trained and led teams ranging from 5 to 15 members in submarine\\n\\t\\t\\t\\t\\tcommunications and electronic warfare techniques.\\n\\t\\t\\t\\t</p>\\n\\t\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\t\\tSubsequently, I have spent the last decade as an Information Professional Officer,\\n\\t\\t\\t\\t\\tevaluating divisional performance across the submarine force. During this time I have\\n\\t\\t\\t\\t\\tinvested heavily in training divison managers and shipboard department heads on proper\\n\\t\\t\\t\\t\\tmanagment of key programs. Most often my skills were applied to physical and personnel\\n\\t\\t\\t\\t\\tsecurity, Communications (COMSEC) security, and Cyber Security with an emphasis on overall\\n\\t\\t\\t\\t\\tprogram management, compliance, and disaster recovery.\\n\\t\\t\\t\\t</p>\\n\\t\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\t\\tMy project management skills have also extended to shipboard casualty and natural disaster\\n\\t\\t\\t\\t\\tresponse policy. I spent six years leading teams of up to fifty personnel in crisis and\\n\\t\\t\\t\\t\\temergency management where we developed and tested plans for initial response, recovery,\\n\\t\\t\\t\\t\\tand contengency operations. I hold multiple certifications and a diverse eduction and\\n\\t\\t\\t\\t\\ttraining background, which demonstrates my adapability and problem solving skills.\\n\\t\\t\\t\\t</p>\\n\\t\\t\\t</div>\\n\\t\\t</span>\\n\\t</ExperienceStyles>\\n</div>\\n\\n<style>\\n\\t.general-image {\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/geo_at_sea.jpeg') no-repeat;\\n\\t\\tbackground-size: cover;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AA4CC,cAAc,cAAC,CAAC,AACf,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,kBAAkB,CAAC,CAAC,SAAS,CAClC,eAAe,CAAE,KAAK,AACvB,CAAC"}`
-};
-var GeneralContent = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$8);
-  return `<div id="${"general"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "General",
-    colorVar: "white",
-    textColor: "rgb(238, 174, 37)"
-  }, {}, {})}
-	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
-    content: () => `<span slot="${"content"}"><div><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">More than two decades of professional experience in the US Navy:</strong></h2>
-				<p class="${"experience-p"}">The first 16 years I was enlisted, spending seven as a division level manager (Chief Petty
-					Officer) where I trained and led teams ranging from 5 to 15 members in submarine
-					communications and electronic warfare techniques.
-				</p>
-				<p class="${"experience-p"}">Subsequently, I have spent the last decade as an Information Professional Officer,
-					evaluating divisional performance across the submarine force. During this time I have
-					invested heavily in training divison managers and shipboard department heads on proper
-					managment of key programs. Most often my skills were applied to physical and personnel
-					security, Communications (COMSEC) security, and Cyber Security with an emphasis on overall
-					program management, compliance, and disaster recovery.
-				</p>
-				<p class="${"experience-p"}">My project management skills have also extended to shipboard casualty and natural disaster
-					response policy. I spent six years leading teams of up to fifty personnel in crisis and
-					emergency management where we developed and tested plans for initial response, recovery,
-					and contengency operations. I hold multiple certifications and a diverse eduction and
-					training background, which demonstrates my adapability and problem solving skills.
-				</p></div></span>`,
-    image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-2lrwj8"}"></div></span>`
-  })}
-</div>`;
-});
-var GeneralContent$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": GeneralContent
-});
-var css$7 = {
-  code: ".general-image.svelte-bflkz7.svelte-bflkz7{display:flex;justify-content:center;align-items:center;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7));background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7));background-size:cover}.general-image.svelte-bflkz7>h2.svelte-bflkz7{font-family:'Gochi Hand', cursive;font-size:4em;text-align:center;color:var(--experience-text)}@media only screen and (max-width: 1500px){.general-image.svelte-bflkz7.svelte-bflkz7{height:30vmax;width:90vmax}}@media only screen and (max-width: 850px){.general-image.svelte-bflkz7.svelte-bflkz7{height:25vmax;width:50vmax}.general-image.svelte-bflkz7>h2.svelte-bflkz7{font-size:2em}}",
-  map: `{"version":3,"file":"EducationCertifications.svelte","sources":["EducationCertifications.svelte"],"sourcesContent":["<script>\\n\\timport SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';\\n\\timport ExperienceStyles from './ExperienceStyles.svelte';\\n<\/script>\\n\\n<div id=\\"education\\">\\n\\t<SubPageTitleBar title={'Education'} colorVar={'white'} textColor={'rgb(238, 174, 37)'} />\\n\\t<ExperienceStyles>\\n\\t\\t<span slot=\\"image\\">\\n\\t\\t\\t<div class=\\"general-image image\\">\\n\\t\\t\\t\\t<h2>Knowledge is Power!</h2>\\n\\t\\t\\t</div>\\n\\t\\t</span>\\n\\t\\t<span slot=\\"content\\">\\n\\t\\t\\t<div>\\n\\t\\t\\t\\t<h2 class=\\"experience-h2\\">\\n\\t\\t\\t\\t\\t<strong class=\\"experience-strong\\">Professional Certifications/Education:</strong>\\n\\t\\t\\t\\t</h2>\\n\\t\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\t\\tI hold civilian and Department of Defense certifications in Cyber, Personnel and Physical\\n\\t\\t\\t\\t\\tSecurity along with a Bachelor's degree in Business Administration from Excelsior College.\\n\\t\\t\\t\\t\\tI am currently four classes from completing an MBA with an emphasis in\\n\\t\\t\\t\\t\\tTechnology/Innovation Management.\\n\\t\\t\\t\\t</p>\\n\\t\\t\\t\\t<h2 class=\\"experience-h2\\">\\n\\t\\t\\t\\t\\t<strong class=\\"experience-strong\\"\\n\\t\\t\\t\\t\\t\\t>Security Professional Education and Development (SPeD) certifications:</strong\\n\\t\\t\\t\\t\\t>\\n\\t\\t\\t\\t</h2>\\n\\t\\t\\t\\t<ul class=\\"experience-ul\\">\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">\\n\\t\\t\\t\\t\\t\\t<a\\n\\t\\t\\t\\t\\t\\t\\tclass=\\"experience-a\\"\\n\\t\\t\\t\\t\\t\\t\\ttitle=\\"Center for Security Excellence SFPC certification webpage.\\"\\n\\t\\t\\t\\t\\t\\t\\thref=\\"https://www.cdse.edu/certification/sfpc.html\\"\\n\\t\\t\\t\\t\\t\\t\\t>Security Professional Fundamentals (SFPC) 3+ years</a\\n\\t\\t\\t\\t\\t\\t>\\n\\t\\t\\t\\t\\t</li>\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">\\n\\t\\t\\t\\t\\t\\t<a\\n\\t\\t\\t\\t\\t\\t\\tclass=\\"experience-a\\"\\n\\t\\t\\t\\t\\t\\t\\ttitle=\\"Center for Security Excellence PSC certification webpage.\\"\\n\\t\\t\\t\\t\\t\\t\\thref=\\"https://www.cdse.edu/certification/psc.html\\"\\n\\t\\t\\t\\t\\t\\t\\t>Physical Security Certification (PSC) 3+ years</a\\n\\t\\t\\t\\t\\t\\t>\\n\\t\\t\\t\\t\\t</li>\\n\\t\\t\\t\\t</ul>\\n\\t\\t\\t\\t<h2 class=\\"experience-h2\\">\\n\\t\\t\\t\\t\\t<strong class=\\"experience-strong\\">Additional Military Training:</strong>\\n\\t\\t\\t\\t</h2>\\n\\t\\t\\t\\t<ul class=\\"experience-ul\\">\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">\\n\\t\\t\\t\\t\\t\\tNavy Communications Security Management System <a\\n\\t\\t\\t\\t\\t\\t\\tclass=\\"experience-a\\"\\n\\t\\t\\t\\t\\t\\t\\ttitle=\\"Navy COMSEC Management System webpage.\\"\\n\\t\\t\\t\\t\\t\\t\\thref=\\"https://www.navifor.usff.navy.mil/ncms/\\">(NCMS)</a\\n\\t\\t\\t\\t\\t\\t> certified inspector 10+ years\\n\\t\\t\\t\\t\\t</li>\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">Information Systems Security Manager 7+ years</li>\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">Operational Security Officer 5+ years</li>\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">Emergency Management Officer 5+ years</li>\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">Classified Material Control Officer 10+ years</li>\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">Command Equal Opportunity Officer 2+ years</li>\\n\\t\\t\\t\\t</ul>\\n\\t\\t\\t\\t<h2 class=\\"experience-h2\\">\\n\\t\\t\\t\\t\\t<strong class=\\"experience-strong\\">Non-military Education:</strong>\\n\\t\\t\\t\\t</h2>\\n\\t\\t\\t\\t<ul class=\\"experience-ul\\">\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">Bachelor's degree in Business Administration (2015)</li>\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">COMPTIA Security+ (2015)</li>\\n\\t\\t\\t\\t\\t<li class=\\"experience-li\\">\\n\\t\\t\\t\\t\\t\\tSigma Beta Delta National Honor Society for Business (2019).\\n\\t\\t\\t\\t\\t</li>\\n\\t\\t\\t\\t</ul>\\n\\t\\t\\t</div>\\n\\t\\t</span>\\n\\t</ExperienceStyles>\\n</div>\\n\\n<style>\\n\\t.general-image {\\n\\t\\tdisplay: flex;\\n\\t\\tjustify-content: center;\\n\\t\\talign-items: center;\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7));\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7));\\n\\t\\tbackground-size: cover;\\n\\t}\\n\\t.general-image > h2 {\\n\\t\\tfont-family: 'Gochi Hand', cursive;\\n\\t\\tfont-size: 4em;\\n\\t\\ttext-align: center;\\n\\t\\tcolor: var(--experience-text);\\n\\t}\\n\\n\\t@media only screen and (max-width: 1500px) {\\n\\t\\t.general-image {\\n\\t\\t\\theight: 30vmax;\\n\\t\\t\\twidth: 90vmax;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 850px) {\\n\\t\\t.general-image {\\n\\t\\t\\theight: 25vmax;\\n\\t\\t\\twidth: 50vmax;\\n\\t\\t}\\n\\t\\t.general-image > h2 {\\n\\t\\t\\tfont-size: 2em;\\n\\t\\t}\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAgFC,cAAc,4BAAC,CAAC,AACf,OAAO,CAAE,IAAI,CACb,eAAe,CAAE,MAAM,CACvB,WAAW,CAAE,MAAM,CACnB,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAC7E,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAC7E,eAAe,CAAE,KAAK,AACvB,CAAC,AACD,4BAAc,CAAG,EAAE,cAAC,CAAC,AACpB,WAAW,CAAE,YAAY,CAAC,CAAC,OAAO,CAClC,SAAS,CAAE,GAAG,CACd,UAAU,CAAE,MAAM,CAClB,KAAK,CAAE,IAAI,iBAAiB,CAAC,AAC9B,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,MAAM,CAAC,AAAC,CAAC,AAC3C,cAAc,4BAAC,CAAC,AACf,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,AACd,CAAC,AACF,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,KAAK,CAAC,AAAC,CAAC,AAC1C,cAAc,4BAAC,CAAC,AACf,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,AACd,CAAC,AACD,4BAAc,CAAG,EAAE,cAAC,CAAC,AACpB,SAAS,CAAE,GAAG,AACf,CAAC,AACF,CAAC"}`
-};
-var EducationCertifications = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$7);
-  return `<div id="${"education"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "Education",
-    colorVar: "white",
-    textColor: "rgb(238, 174, 37)"
-  }, {}, {})}
-	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
-    content: () => `<span slot="${"content"}"><div><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">Professional Certifications/Education:</strong></h2>
-				<p class="${"experience-p"}">I hold civilian and Department of Defense certifications in Cyber, Personnel and Physical
-					Security along with a Bachelor&#39;s degree in Business Administration from Excelsior College.
-					I am currently four classes from completing an MBA with an emphasis in
-					Technology/Innovation Management.
-				</p>
-				<h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">Security Professional Education and Development (SPeD) certifications:</strong></h2>
-				<ul class="${"experience-ul"}"><li class="${"experience-li"}"><a class="${"experience-a"}" title="${"Center for Security Excellence SFPC certification webpage."}" href="${"https://www.cdse.edu/certification/sfpc.html"}">Security Professional Fundamentals (SFPC) 3+ years</a></li>
-					<li class="${"experience-li"}"><a class="${"experience-a"}" title="${"Center for Security Excellence PSC certification webpage."}" href="${"https://www.cdse.edu/certification/psc.html"}">Physical Security Certification (PSC) 3+ years</a></li></ul>
-				<h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">Additional Military Training:</strong></h2>
-				<ul class="${"experience-ul"}"><li class="${"experience-li"}">Navy Communications Security Management System <a class="${"experience-a"}" title="${"Navy COMSEC Management System webpage."}" href="${"https://www.navifor.usff.navy.mil/ncms/"}">(NCMS)</a> certified inspector 10+ years
-					</li>
-					<li class="${"experience-li"}">Information Systems Security Manager 7+ years</li>
-					<li class="${"experience-li"}">Operational Security Officer 5+ years</li>
-					<li class="${"experience-li"}">Emergency Management Officer 5+ years</li>
-					<li class="${"experience-li"}">Classified Material Control Officer 10+ years</li>
-					<li class="${"experience-li"}">Command Equal Opportunity Officer 2+ years</li></ul>
-				<h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">Non-military Education:</strong></h2>
-				<ul class="${"experience-ul"}"><li class="${"experience-li"}">Bachelor&#39;s degree in Business Administration (2015)</li>
-					<li class="${"experience-li"}">COMPTIA Security+ (2015)</li>
-					<li class="${"experience-li"}">Sigma Beta Delta National Honor Society for Business (2019).
-					</li></ul></div></span>`,
-    image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-bflkz7"}"><h2 class="${"svelte-bflkz7"}">Knowledge is Power!</h2></div></span>`
-  })}
-</div>`;
-});
-var EducationCertifications$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": EducationCertifications
-});
-var css$6 = {
-  code: ".general-image.svelte-s8zx7d{background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/pexels-pixabay-60504.jpg') no-repeat;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/pexels-pixabay-60504.jpg') no-repeat;background-size:cover}",
-  map: `{"version":3,"file":"NetworkSecurity.svelte","sources":["NetworkSecurity.svelte"],"sourcesContent":["<script>\\n\\timport SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';\\n\\timport ExperienceStyles from './ExperienceStyles.svelte';\\n<\/script>\\n\\n<div id=\\"network-security\\">\\n\\t<SubPageTitleBar title={'Cyber Security'} colorVar={'white'} textColor={'rgb(238, 174, 37)'} />\\n\\t<ExperienceStyles>\\n\\t\\t<span slot=\\"image\\">\\n\\t\\t\\t<div class=\\"general-image image\\" />\\n\\t\\t</span>\\n\\t\\t<span slot=\\"content\\">\\n\\t\\t\\t<h2 class=\\"experience-h2\\">\\n\\t\\t\\t\\t<strong class=\\"experience-strong\\">More than ten years of Cyber Security Experience:</strong>\\n\\t\\t\\t</h2>\\n\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\tMy history with Networks and cyber security administration actually starts more than 20\\n\\t\\t\\t\\tyears ago, with my first role as the admin of a classified network system on my first\\n\\t\\t\\t\\tsubmarine. However, technology and policy have so greatly evolved that those years of simple\\n\\t\\t\\t\\thardware repair, basic user training, and minimal configuration management are\\n\\t\\t\\t\\tunrecognizable against modern requirements.\\n\\t\\t\\t</p>\\n\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\tIn the last twenty years, we have seen an explosion of requirements, increased complexity in\\n\\t\\t\\t\\tthreats, and an ever growing dependency on cyber-systems. My last ten years have been spent\\n\\t\\t\\t\\tobserving emerging threats while developing policies and analytics adopted across the\\n\\t\\t\\t\\tsubmarine force by which to measure cyber resilience. As an inspector and mentor of\\n\\t\\t\\t\\tshipboard network security teams, I work to evaluate risk and prioritize elements of Navy\\n\\t\\t\\t\\tpolicy to achieve the most robust network posture possible.\\n\\t\\t\\t</p>\\n\\t\\t</span>\\n\\t</ExperienceStyles>\\n</div>\\n\\n<style>\\n\\t.general-image {\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/pexels-pixabay-60504.jpg') no-repeat;\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/pexels-pixabay-60504.jpg') no-repeat;\\n\\t\\tbackground-size: cover;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAmCC,cAAc,cAAC,CAAC,AACf,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,2BAA2B,CAAC,CAAC,SAAS,CAC3C,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,2BAA2B,CAAC,CAAC,SAAS,CAC3C,eAAe,CAAE,KAAK,AACvB,CAAC"}`
-};
-var NetworkSecurity = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$6);
-  return `<div id="${"network-security"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "Cyber Security",
-    colorVar: "white",
-    textColor: "rgb(238, 174, 37)"
-  }, {}, {})}
-	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
-    content: () => `<span slot="${"content"}"><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">More than ten years of Cyber Security Experience:</strong></h2>
-			<p class="${"experience-p"}">My history with Networks and cyber security administration actually starts more than 20
-				years ago, with my first role as the admin of a classified network system on my first
-				submarine. However, technology and policy have so greatly evolved that those years of simple
-				hardware repair, basic user training, and minimal configuration management are
-				unrecognizable against modern requirements.
-			</p>
-			<p class="${"experience-p"}">In the last twenty years, we have seen an explosion of requirements, increased complexity in
-				threats, and an ever growing dependency on cyber-systems. My last ten years have been spent
-				observing emerging threats while developing policies and analytics adopted across the
-				submarine force by which to measure cyber resilience. As an inspector and mentor of
-				shipboard network security teams, I work to evaluate risk and prioritize elements of Navy
-				policy to achieve the most robust network posture possible.
-			</p></span>`,
-    image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-s8zx7d"}"></div></span>`
-  })}
-</div>`;
-});
-var NetworkSecurity$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": NetworkSecurity
-});
-var css$5 = {
-  code: ".general-image.svelte-r1uuql{background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/pexels-pixabay-270373.jpg') no-repeat;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/pexels-pixabay-270373.jpg') no-repeat;background-size:cover}",
-  map: `{"version":3,"file":"WebDevelopment.svelte","sources":["WebDevelopment.svelte"],"sourcesContent":["<script>\\n\\timport SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';\\n\\timport ExperienceStyles from './ExperienceStyles.svelte';\\n<\/script>\\n\\n<div id=\\"web-development\\">\\n\\t<SubPageTitleBar title={'Web Development'} colorVar={'white'} textColor={'rgb(238, 174, 37)'} />\\n\\t<ExperienceStyles>\\n\\t\\t<span slot=\\"image\\">\\n\\t\\t\\t<div class=\\"general-image image\\" />\\n\\t\\t</span>\\n\\t\\t<span slot=\\"content\\">\\n\\t\\t\\t<h2 class=\\"experience-h2\\">\\n\\t\\t\\t\\t<strong class=\\"experience-strong\\"\\n\\t\\t\\t\\t\\t>More than five years of Microsoft SharePoint administration:</strong\\n\\t\\t\\t\\t>\\n\\t\\t\\t</h2>\\n\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\tFar from a SharePoint expert, I have been a quick study and efficiently managed multiple\\n\\t\\t\\t\\tsites across three commands. After COVID-19 inhibited traditional office work for an\\n\\t\\t\\t\\textended period, I took a break from my MBA and quickly taught myself HTML, CSS, JavaScript\\n\\t\\t\\t\\tand ReactJS to develop custom web solutions to support increased work from home\\n\\t\\t\\t\\trequirements. I have developed proficiency with the SP REST API. Recently, I have been\\n\\t\\t\\t\\tseeking a mentor that would assist me with improving my SharePoint and development skills.\\n\\t\\t\\t\\tIf you stumbled across this site and happen to be interested in mentoring, please contact\\n\\t\\t\\t\\tme. This site has been developed using Svelte, which I have found to be the most efficient\\n\\t\\t\\t\\tframework I have used thus far.\\n\\t\\t\\t</p>\\n\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\tMy enthusiasm for development has continued to grow. I have built apps for tracking\\n\\t\\t\\t\\tpersonnel security clearance data, command onboarding programs, a small submarine\\n\\t\\t\\t\\tcommunication simulator, and some other personal projects, which I can share from my <a\\n\\t\\t\\t\\t\\tclass=\\"experience-a\\"\\n\\t\\t\\t\\t\\thref=\\"https://github.com/navsubrm\\">GitHub</a\\n\\t\\t\\t\\t>\\n\\t\\t\\t\\tif you are interested. I keep most of my work private due to its purpose, but if you ask and\\n\\t\\t\\t\\tI can verify you, I would be happy to let you view the code.\\n\\t\\t\\t</p>\\n\\t\\t</span>\\n\\t</ExperienceStyles>\\n</div>\\n\\n<style>\\n\\t.general-image {\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/pexels-pixabay-270373.jpg') no-repeat;\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/pexels-pixabay-270373.jpg') no-repeat;\\n\\t\\tbackground-size: cover;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AA2CC,cAAc,cAAC,CAAC,AACf,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,4BAA4B,CAAC,CAAC,SAAS,CAC5C,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,4BAA4B,CAAC,CAAC,SAAS,CAC5C,eAAe,CAAE,KAAK,AACvB,CAAC"}`
-};
-var WebDevelopment = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$5);
-  return `<div id="${"web-development"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "Web Development",
-    colorVar: "white",
-    textColor: "rgb(238, 174, 37)"
-  }, {}, {})}
-	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
-    content: () => `<span slot="${"content"}"><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">More than five years of Microsoft SharePoint administration:</strong></h2>
-			<p class="${"experience-p"}">Far from a SharePoint expert, I have been a quick study and efficiently managed multiple
-				sites across three commands. After COVID-19 inhibited traditional office work for an
-				extended period, I took a break from my MBA and quickly taught myself HTML, CSS, JavaScript
-				and ReactJS to develop custom web solutions to support increased work from home
-				requirements. I have developed proficiency with the SP REST API. Recently, I have been
-				seeking a mentor that would assist me with improving my SharePoint and development skills.
-				If you stumbled across this site and happen to be interested in mentoring, please contact
-				me. This site has been developed using Svelte, which I have found to be the most efficient
-				framework I have used thus far.
-			</p>
-			<p class="${"experience-p"}">My enthusiasm for development has continued to grow. I have built apps for tracking
-				personnel security clearance data, command onboarding programs, a small submarine
-				communication simulator, and some other personal projects, which I can share from my <a class="${"experience-a"}" href="${"https://github.com/navsubrm"}">GitHub</a>
-				if you are interested. I keep most of my work private due to its purpose, but if you ask and
-				I can verify you, I would be happy to let you view the code.
-			</p></span>`,
-    image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-r1uuql"}"></div></span>`
-  })}
-</div>`;
-});
-var WebDevelopment$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": WebDevelopment
-});
-var css$4 = {
-  code: ".general-image.svelte-kl4qf4{height:45vmax;width:35vmax;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/Loose_lips_might_sink_ships.jpeg') no-repeat;background:linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\n			url('/Loose_lips_might_sink_ships.jpeg') no-repeat;background-size:cover;background-position:center;margin:20px;border-radius:0.9em;box-shadow:inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text)}@media only screen and (max-width: 1500px){.general-image.svelte-kl4qf4{height:50vmax;width:35vmax}}@media only screen and (max-width: 850px){.general-image.svelte-kl4qf4{height:25vmax;width:50vmax;transform:translateY(0)}}",
-  map: `{"version":3,"file":"SecurityManagement.svelte","sources":["SecurityManagement.svelte"],"sourcesContent":["<script>\\n\\timport SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';\\n\\timport ExperienceStyles from './ExperienceStyles.svelte';\\n<\/script>\\n\\n<div id=\\"security-management\\">\\n\\t<SubPageTitleBar\\n\\t\\ttitle={'Security Management'}\\n\\t\\tcolorVar={'white'}\\n\\t\\ttextColor={'rgb(238, 174, 37)'}\\n\\t/>\\n\\t<ExperienceStyles>\\n\\t\\t<span slot=\\"image\\">\\n\\t\\t\\t<div class=\\"general-image image\\" />\\n\\t\\t</span>\\n\\t\\t<span slot=\\"content\\">\\n\\t\\t\\t<h2 class=\\"experience-h2\\">\\n\\t\\t\\t\\t<strong class=\\"experience-strong\\"\\n\\t\\t\\t\\t\\t>More than 20 years of Physical and Personnel Security Experience:</strong\\n\\t\\t\\t\\t>\\n\\t\\t\\t</h2>\\n\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\tPhysical, personnel, and information security management has been a focus of my entire\\n\\t\\t\\t\\tmilitary serivce. Most of my career has involved acting as an assistant or command security\\n\\t\\t\\t\\tmanager in some form. The last ten years, I have been the head security officer in each\\n\\t\\t\\t\\tassignment. During this time, I have managed tens of thousands of requests for access to\\n\\t\\t\\t\\tclassified materiels and facilities, managed background investigations, oversaw inquires to\\n\\t\\t\\t\\tsecurity violations and incidents, certified secure facilities, and developed security\\n\\t\\t\\t\\tpolicy.\\n\\t\\t\\t</p>\\n\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\tI have managed small and large projects reducing cost, waste, and improving classified\\n\\t\\t\\t\\tmateriel management. From producing clean alternative energy by transitioning destruction\\n\\t\\t\\t\\tprocesses to waste-to-energy conversion facilities to larger facility modificaitons, I am\\n\\t\\t\\t\\tpassionate about finding innovative security solutions.\\n\\t\\t\\t</p>\\n\\t\\t\\t<p class=\\"experience-p\\">\\n\\t\\t\\t\\tIn 2018, I completed the Department of Defense Security Professional Education Development\\n\\t\\t\\t\\t(SPeD) ceritifications for Security Fundamentals Professional and Physical Security.\\n\\t\\t\\t\\t<a\\n\\t\\t\\t\\t\\tclass=\\"experience-a\\"\\n\\t\\t\\t\\t\\thref=\\"https://www.cdse.edu/Certification/About-SP\u0113D-Certification/\\"\\n\\t\\t\\t\\t\\ttitle=\\"SPeD about page\\">Click here for details on the SPeD program.</a\\n\\t\\t\\t\\t>\\n\\t\\t\\t</p>\\n\\t\\t</span>\\n\\t</ExperienceStyles>\\n</div>\\n\\n<style>\\n\\t.general-image {\\n\\t\\theight: 45vmax;\\n\\t\\twidth: 35vmax;\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/Loose_lips_might_sink_ships.jpeg') no-repeat;\\n\\t\\tbackground: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/Loose_lips_might_sink_ships.jpeg') no-repeat;\\n\\t\\tbackground-size: cover;\\n\\t\\tbackground-position: center;\\n\\t\\tmargin: 20px;\\n\\t\\tborder-radius: 0.9em;\\n\\t\\tbox-shadow: inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text);\\n\\t}\\n\\n\\t@media only screen and (max-width: 1500px) {\\n\\t\\t.general-image {\\n\\t\\t\\theight: 50vmax;\\n\\t\\t\\twidth: 35vmax;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 850px) {\\n\\t\\t.general-image {\\n\\t\\t\\theight: 25vmax;\\n\\t\\t\\twidth: 50vmax;\\n\\t\\t\\ttransform: translateY(0);\\n\\t\\t}\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAkDC,cAAc,cAAC,CAAC,AACf,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,CACb,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,mCAAmC,CAAC,CAAC,SAAS,CACnD,UAAU,CAAE,gBAAgB,KAAK,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,mCAAmC,CAAC,CAAC,SAAS,CACnD,eAAe,CAAE,KAAK,CACtB,mBAAmB,CAAE,MAAM,CAC3B,MAAM,CAAE,IAAI,CACZ,aAAa,CAAE,KAAK,CACpB,UAAU,CAAE,KAAK,CAAC,CAAC,CAAC,CAAC,CAAC,IAAI,CAAC,IAAI,cAAc,CAAC,CAAC,CAAC,GAAG,CAAC,IAAI,CAAC,IAAI,CAAC,IAAI,iBAAiB,CAAC,AACrF,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,MAAM,CAAC,AAAC,CAAC,AAC3C,cAAc,cAAC,CAAC,AACf,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,AACd,CAAC,AACF,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,KAAK,CAAC,AAAC,CAAC,AAC1C,cAAc,cAAC,CAAC,AACf,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,CACb,SAAS,CAAE,WAAW,CAAC,CAAC,AACzB,CAAC,AACF,CAAC"}`
-};
-var SecurityManagement = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$4);
-  return `<div id="${"security-management"}">${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "Security Management",
-    colorVar: "white",
-    textColor: "rgb(238, 174, 37)"
-  }, {}, {})}
-	${validate_component(ExperienceStyles, "ExperienceStyles").$$render($$result, {}, {}, {
-    content: () => `<span slot="${"content"}"><h2 class="${"experience-h2"}"><strong class="${"experience-strong"}">More than 20 years of Physical and Personnel Security Experience:</strong></h2>
-			<p class="${"experience-p"}">Physical, personnel, and information security management has been a focus of my entire
-				military serivce. Most of my career has involved acting as an assistant or command security
-				manager in some form. The last ten years, I have been the head security officer in each
-				assignment. During this time, I have managed tens of thousands of requests for access to
-				classified materiels and facilities, managed background investigations, oversaw inquires to
-				security violations and incidents, certified secure facilities, and developed security
-				policy.
-			</p>
-			<p class="${"experience-p"}">I have managed small and large projects reducing cost, waste, and improving classified
-				materiel management. From producing clean alternative energy by transitioning destruction
-				processes to waste-to-energy conversion facilities to larger facility modificaitons, I am
-				passionate about finding innovative security solutions.
-			</p>
-			<p class="${"experience-p"}">In 2018, I completed the Department of Defense Security Professional Education Development
-				(SPeD) ceritifications for Security Fundamentals Professional and Physical Security.
-				<a class="${"experience-a"}" href="${"https://www.cdse.edu/Certification/About-SP\u0113D-Certification/"}" title="${"SPeD about page"}">Click here for details on the SPeD program.</a></p></span>`,
-    image: () => `<span slot="${"image"}"><div class="${"general-image image svelte-kl4qf4"}"></div></span>`
-  })}
-</div>`;
-});
-var SecurityManagement$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": SecurityManagement
-});
-var Experience = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  return `${$$result.head += `${$$result.title = `<title>Nathan Meeker || Experience</title>`, ""}`, ""}
-
-<div>${validate_component(GeneralContent, "GeneralContent").$$render($$result, {}, {}, {})}
-	${validate_component(NetworkSecurity, "NetworkSecurity").$$render($$result, {}, {}, {})}
-	${validate_component(WebDevelopment, "WebDevelopment").$$render($$result, {}, {}, {})}
-	${validate_component(SecurityManagement, "SecurityManagement").$$render($$result, {}, {}, {})}
-	${validate_component(EducationCertifications, "EducationCertifications").$$render($$result, {}, {}, {})}
-</div>`;
-});
-var index$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": Experience
-});
-var css$3 = {
-  code: "form.svelte-1wo2eds{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;text-transform:uppercase;width:100%;margin:auto}input.svelte-1wo2eds,textarea.svelte-1wo2eds{padding:20px;margin:5px;font-size:1.5em;border:none;border-radius:0.2em;cursor:pointer}label.svelte-1wo2eds{font-size:1.5em;color:white}.contact.svelte-1wo2eds{display:flex;justify-content:center;align-items:center;margin:20vh auto;height:90vh;width:100%}.card-inner.svelte-1wo2eds{position:relative;padding:80px;width:30%;background:center\n			linear-gradient(to bottom right, var(--shadow-color) 65%, var(--light-blue) 90%);border-radius:1em;box-shadow:inset 0 0 20px var(--shadow-color), 0 0 80px var(--shadow-color)}.alert-warn{-webkit-animation:svelte-1wo2eds-alertEnter 1s linear forwards;animation:svelte-1wo2eds-alertEnter 1s linear forwards;display:inline-block;background-color:rgba(242, 242, 24, 0.8)}.alert-success{position:absolute;display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-item-align:center;align-self:center;top:25%;padding:50px;-webkit-animation:svelte-1wo2eds-msgAlertEnter 7s linear forwards;animation:svelte-1wo2eds-msgAlertEnter 7s linear forwards;background-color:rgba(49, 212, 17, 0.8)}.alert-fail{position:absolute;display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-item-align:center;align-self:center;top:25%;padding:50px;-webkit-animation:svelte-1wo2eds-msgAlertEnter 7s linear forwards;animation:svelte-1wo2eds-msgAlertEnter 7s linear forwards;background-color:rgba(237, 24, 24, 0.8)}.alert.svelte-1wo2eds{font-size:1.2vmax;padding:5px;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;border-radius:0.2em}@-webkit-keyframes svelte-1wo2eds-alertEnter{0%{background-color:none;opacity:0}50%{opacity:0.3}100%{opacity:1;background-color:rgba(242, 242, 24, 0.8)}}@keyframes svelte-1wo2eds-alertEnter{0%{background-color:none;opacity:0}50%{opacity:0.3}100%{opacity:1;background-color:rgba(242, 242, 24, 0.8)}}@-webkit-keyframes svelte-1wo2eds-msgAlertEnter{0%{opacity:0}15%{opacity:1}85%{opacity:1}100%{opacity:0}}@keyframes svelte-1wo2eds-msgAlertEnter{0%{opacity:0}15%{opacity:1}85%{opacity:1}100%{opacity:0}}@media only screen and (max-width: 1400px){.card-inner.svelte-1wo2eds{width:40%;padding:20px}}@media only screen and (max-width: 800px){.card-inner.svelte-1wo2eds{width:75%;padding:25px}}@media only screen and (max-width: 650px){.card-inner.svelte-1wo2eds{width:90%;padding:15px}}",
-  map: `{"version":3,"file":"contact.svelte","sources":["contact.svelte"],"sourcesContent":["<script lang=\\"ts\\">import { fly, fade } from 'svelte/transition';\\nimport emailValidator from 'email-validator';\\nimport dompurify from 'dompurify';\\nimport emailjsCom from 'emailjs-com';\\nimport SubPageTitleBar from '../components/SubPageTitleBar.svelte';\\n//Handle contact form:\\nemailjsCom.init('user_RoDNRpp8DGk61m380dPFq');\\n//DOM elements for contact form:\\nlet fName;\\nlet lName;\\nlet email;\\nlet message;\\n//Error Elements:\\nlet emailFormat;\\nlet messageSuccess;\\nlet messageFail;\\n//Form variables:\\nlet alertTimer;\\n// Check email address to confirm it is a real address\\nconst validateEmail = () => {\\n    if (email === null || email === '')\\n        return;\\n    if (!emailValidator.validate(email))\\n        return emailFormat.classList.add('alert-warn');\\n    emailFormat.classList.remove('alert-warn');\\n};\\n//Check if field is blank and add alert.\\nconst validateBlankField = (e) => {\\n    const actionItem = document.querySelector(\`#\${e.target.getAttribute('id')}\`);\\n    if (e.target.value === null || e.target.value === '' || !e.target.value) {\\n        actionItem.classList.add('alert-warn');\\n        actionItem.placeholder = 'Field required to submit';\\n    }\\n};\\n//Reset field on focus\\nconst clearInvalidation = (e, placeholder) => {\\n    const actionItem = document.querySelector(\`#\${e.target.getAttribute('id')}\`);\\n    actionItem.classList.remove('alert-warn');\\n    actionItem.placeholder = placeholder;\\n};\\n//Allows for typing before the email error alert will show.\\nconst keyEventValidator = (callback) => {\\n    clearTimeout(alertTimer);\\n    alertTimer = setTimeout(() => callback(), 1500);\\n};\\n//Verify that only allowable text is entered into fields.\\nconst inputValidator = (input) => {\\n    let sanitizedInput = dompurify.sanitize(input);\\n    if (sanitizedInput.includes('Field required to submit') || sanitizedInput === '')\\n        return true;\\n};\\nconst validateMessageContents = () => {\\n    let invalidContents = 0;\\n    if (inputValidator(fName))\\n        invalidContents++;\\n    if (inputValidator(lName))\\n        invalidContents++;\\n    if (!emailValidator.validate(email))\\n        invalidContents++;\\n    if (inputValidator(message))\\n        invalidContents++;\\n    if (invalidContents === 0)\\n        return true;\\n};\\nconst messageSubmit = (e) => {\\n    e.preventDefault();\\n    if (validateMessageContents()) {\\n        emailjsCom\\n            .send('service_0wgxmn4', 'template_u9mwv2n', {\\n            from_name: \`\${fName} \${lName}\`,\\n            from_email: \`\${email}\`,\\n            message: dompurify.sanitize(message)\\n        })\\n            .then(function (response) {\\n            //add alert class for success or failure\\n            messageSuccess.classList.add('alert-success');\\n            setTimeout(() => messageSuccess.classList.remove('alert-success'), 7000);\\n        }, function (err) {\\n            messageFail.classList.add('alert-fail');\\n            setTimeout(() => messageFail.classList.remove('alert-fail'), 7000);\\n        });\\n    }\\n    else {\\n        messageFail.classList.add('alert-fail');\\n        setTimeout(() => messageFail.classList.remove('alert-fail'), 7000);\\n    }\\n};\\n<\/script>\\n\\n<svelte:head>\\n\\t<title>Nathan Meeker || Contact</title>\\n</svelte:head>\\n\\n<div in:fly={{ y: -100, duration: 500, delay: 400 }} out:fade>\\n\\t<SubPageTitleBar title={'Contact me'} colorVar={'white'} textColor={'var(--light-blue)'} />\\n\\t<div class=\\"contact\\">\\n\\t\\t<div id=\\"contact-card\\" class=\\"card-inner\\">\\n\\t\\t\\t<form action=\\"#\\" id=\\"contact-form\\" class=\\"form\\" on:submit={messageSubmit}>\\n\\t\\t\\t\\t<label for=\\"first-name\\">first name: </label>\\n\\t\\t\\t\\t<input\\n\\t\\t\\t\\t\\tid=\\"first-name\\"\\n\\t\\t\\t\\t\\ttype=\\"text\\"\\n\\t\\t\\t\\t\\tsize=\\"50\\"\\n\\t\\t\\t\\t\\tplaceholder=\\"First Name\\"\\n\\t\\t\\t\\t\\tbind:value={fName}\\n\\t\\t\\t\\t\\ton:focus={(e) => clearInvalidation(e, 'First Name')}\\n\\t\\t\\t\\t\\ton:click={(e) => clearInvalidation(e, 'First Name')}\\n\\t\\t\\t\\t\\ton:blur={(e) => validateBlankField(e)}\\n\\t\\t\\t\\t/>\\n\\t\\t\\t\\t<label for=\\"last-name\\">last name: </label>\\n\\t\\t\\t\\t<input\\n\\t\\t\\t\\t\\tid=\\"last-name\\"\\n\\t\\t\\t\\t\\ttype=\\"text\\"\\n\\t\\t\\t\\t\\tsize=\\"50\\"\\n\\t\\t\\t\\t\\tplaceholder=\\"Last Name\\"\\n\\t\\t\\t\\t\\tbind:value={lName}\\n\\t\\t\\t\\t\\ton:focus={(e) => clearInvalidation(e, 'Last Name')}\\n\\t\\t\\t\\t\\ton:click={(e) => clearInvalidation(e, 'Last Name')}\\n\\t\\t\\t\\t\\ton:blur={(e) => validateBlankField(e)}\\n\\t\\t\\t\\t/>\\n\\t\\t\\t\\t<label for=\\"email\\"\\n\\t\\t\\t\\t\\t>email:\\n\\t\\t\\t\\t\\t<span bind:this={emailFormat} class=\\"alert hidden\\"\\n\\t\\t\\t\\t\\t\\t>entry is not a valid email address.</span\\n\\t\\t\\t\\t\\t></label\\n\\t\\t\\t\\t>\\n\\t\\t\\t\\t<input\\n\\t\\t\\t\\t\\tid=\\"email\\"\\n\\t\\t\\t\\t\\ttype=\\"text\\"\\n\\t\\t\\t\\t\\tsize=\\"50\\"\\n\\t\\t\\t\\t\\tplaceholder=\\"Email\\"\\n\\t\\t\\t\\t\\tbind:value={email}\\n\\t\\t\\t\\t\\ton:focus={(e) => clearInvalidation(e, 'Email')}\\n\\t\\t\\t\\t\\ton:click={(e) => clearInvalidation(e, 'Email')}\\n\\t\\t\\t\\t\\ton:blur={(e) => validateBlankField(e)}\\n\\t\\t\\t\\t\\ton:keyup={() => keyEventValidator(validateEmail)}\\n\\t\\t\\t\\t/>\\n\\t\\t\\t\\t<label for=\\"message\\">message: </label>\\n\\t\\t\\t\\t<textarea\\n\\t\\t\\t\\t\\tid=\\"message\\"\\n\\t\\t\\t\\t\\tcols=\\"50\\"\\n\\t\\t\\t\\t\\trows=\\"5\\"\\n\\t\\t\\t\\t\\tplaceholder=\\"Enter message here.\\"\\n\\t\\t\\t\\t\\tbind:value={message}\\n\\t\\t\\t\\t\\ton:focus={(e) => clearInvalidation(e, 'Enter message here.')}\\n\\t\\t\\t\\t\\ton:click={(e) => clearInvalidation(e, 'Enter message here.')}\\n\\t\\t\\t\\t\\ton:blur={(e) => validateBlankField(e)}\\n\\t\\t\\t\\t/>\\n\\t\\t\\t\\t<span id=\\"message-success\\" class=\\"alert hidden\\" bind:this={messageSuccess}\\n\\t\\t\\t\\t\\t>Thank you for reaching out to me! I will get back to you shortly.</span\\n\\t\\t\\t\\t>\\n\\t\\t\\t\\t<span id=\\"message-fail\\" class=\\"alert hidden\\" bind:this={messageFail}\\n\\t\\t\\t\\t\\t>Your message failed to send. Check the information and try again.</span\\n\\t\\t\\t\\t>\\n\\t\\t\\t\\t<button class=\\"btn btn-main btn-contact\\" type=\\"submit\\" value=\\"submit\\">send message</button>\\n\\t\\t\\t</form>\\n\\t\\t</div>\\n\\t</div>\\n</div>\\n\\n<style>\\n\\tform {\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\t-webkit-box-orient: vertical;\\n\\t\\t-webkit-box-direction: normal;\\n\\t\\t-ms-flex-direction: column;\\n\\t\\tflex-direction: column;\\n\\t\\ttext-transform: uppercase;\\n\\t\\twidth: 100%;\\n\\t\\tmargin: auto;\\n\\t}\\n\\n\\tinput,\\n\\ttextarea {\\n\\t\\tpadding: 20px;\\n\\t\\tmargin: 5px;\\n\\t\\tfont-size: 1.5em;\\n\\t\\tborder: none;\\n\\t\\tborder-radius: 0.2em;\\n\\t\\tcursor: pointer;\\n\\t}\\n\\n\\tlabel {\\n\\t\\tfont-size: 1.5em;\\n\\t\\tcolor: white;\\n\\t}\\n\\n\\t.contact {\\n\\t\\tdisplay: flex;\\n\\t\\tjustify-content: center;\\n\\t\\talign-items: center;\\n\\t\\tmargin: 20vh auto;\\n\\t\\theight: 90vh;\\n\\t\\twidth: 100%;\\n\\t}\\n\\n\\t.card-inner {\\n\\t\\tposition: relative;\\n\\t\\tpadding: 80px;\\n\\t\\twidth: 30%;\\n\\t\\tbackground: center\\n\\t\\t\\tlinear-gradient(to bottom right, var(--shadow-color) 65%, var(--light-blue) 90%);\\n\\t\\tborder-radius: 1em;\\n\\t\\tbox-shadow: inset 0 0 20px var(--shadow-color), 0 0 80px var(--shadow-color);\\n\\t}\\n\\n\\t:global(.alert-warn) {\\n\\t\\t-webkit-animation: alertEnter 1s linear forwards;\\n\\t\\tanimation: alertEnter 1s linear forwards;\\n\\t\\tdisplay: inline-block;\\n\\t\\tbackground-color: rgba(242, 242, 24, 0.8);\\n\\t}\\n\\n\\t:global(.alert-success) {\\n\\t\\tposition: absolute;\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\t-ms-flex-item-align: center;\\n\\t\\talign-self: center;\\n\\t\\ttop: 25%;\\n\\t\\tpadding: 50px;\\n\\t\\t-webkit-animation: msgAlertEnter 7s linear forwards;\\n\\t\\tanimation: msgAlertEnter 7s linear forwards;\\n\\t\\tbackground-color: rgba(49, 212, 17, 0.8);\\n\\t}\\n\\n\\t:global(.alert-fail) {\\n\\t\\tposition: absolute;\\n\\t\\tdisplay: -webkit-box;\\n\\t\\tdisplay: -ms-flexbox;\\n\\t\\tdisplay: flex;\\n\\t\\t-ms-flex-item-align: center;\\n\\t\\talign-self: center;\\n\\t\\ttop: 25%;\\n\\t\\tpadding: 50px;\\n\\t\\t-webkit-animation: msgAlertEnter 7s linear forwards;\\n\\t\\tanimation: msgAlertEnter 7s linear forwards;\\n\\t\\tbackground-color: rgba(237, 24, 24, 0.8);\\n\\t}\\n\\n\\t.alert {\\n\\t\\tfont-size: 1.2vmax;\\n\\t\\tpadding: 5px;\\n\\t\\twidth: -webkit-fit-content;\\n\\t\\twidth: -moz-fit-content;\\n\\t\\twidth: fit-content;\\n\\t\\tborder-radius: 0.2em;\\n\\t}\\n\\n\\t@-webkit-keyframes alertEnter {\\n\\t\\t0% {\\n\\t\\t\\tbackground-color: none;\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t\\t50% {\\n\\t\\t\\topacity: 0.3;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\topacity: 1;\\n\\t\\t\\tbackground-color: rgba(242, 242, 24, 0.8);\\n\\t\\t}\\n\\t}\\n\\n\\t@keyframes alertEnter {\\n\\t\\t0% {\\n\\t\\t\\tbackground-color: none;\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t\\t50% {\\n\\t\\t\\topacity: 0.3;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\topacity: 1;\\n\\t\\t\\tbackground-color: rgba(242, 242, 24, 0.8);\\n\\t\\t}\\n\\t}\\n\\n\\t@-webkit-keyframes msgAlertEnter {\\n\\t\\t0% {\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t\\t15% {\\n\\t\\t\\topacity: 1;\\n\\t\\t}\\n\\t\\t85% {\\n\\t\\t\\topacity: 1;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t}\\n\\n\\t@keyframes msgAlertEnter {\\n\\t\\t0% {\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t\\t15% {\\n\\t\\t\\topacity: 1;\\n\\t\\t}\\n\\t\\t85% {\\n\\t\\t\\topacity: 1;\\n\\t\\t}\\n\\t\\t100% {\\n\\t\\t\\topacity: 0;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 1400px) {\\n\\t\\t.card-inner {\\n\\t\\t\\twidth: 40%;\\n\\t\\t\\tpadding: 20px;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 800px) {\\n\\t\\t.card-inner {\\n\\t\\t\\twidth: 75%;\\n\\t\\t\\tpadding: 25px;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 650px) {\\n\\t\\t.card-inner {\\n\\t\\t\\twidth: 90%;\\n\\t\\t\\tpadding: 15px;\\n\\t\\t}\\n\\t}\\n</style>\\n"],"names":[],"mappings":"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"}`
-};
-var Contact = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  import_emailjs_com.default.init("user_RoDNRpp8DGk61m380dPFq");
-  let fName;
-  let lName;
-  let email;
-  let emailFormat;
-  let messageSuccess;
-  let messageFail;
-  $$result.css.add(css$3);
-  return `${$$result.head += `${$$result.title = `<title>Nathan Meeker || Contact</title>`, ""}`, ""}
-
-<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "Contact me",
-    colorVar: "white",
-    textColor: "var(--light-blue)"
-  }, {}, {})}
-	<div class="${"contact svelte-1wo2eds"}"><div id="${"contact-card"}" class="${"card-inner svelte-1wo2eds"}"><form action="${"#"}" id="${"contact-form"}" class="${"form svelte-1wo2eds"}"><label for="${"first-name"}" class="${"svelte-1wo2eds"}">first name: </label>
-				<input id="${"first-name"}" type="${"text"}" size="${"50"}" placeholder="${"First Name"}" class="${"svelte-1wo2eds"}"${add_attribute("value", fName, 0)}>
-				<label for="${"last-name"}" class="${"svelte-1wo2eds"}">last name: </label>
-				<input id="${"last-name"}" type="${"text"}" size="${"50"}" placeholder="${"Last Name"}" class="${"svelte-1wo2eds"}"${add_attribute("value", lName, 0)}>
-				<label for="${"email"}" class="${"svelte-1wo2eds"}">email:
-					<span class="${"alert hidden svelte-1wo2eds"}"${add_attribute("this", emailFormat, 0)}>entry is not a valid email address.</span></label>
-				<input id="${"email"}" type="${"text"}" size="${"50"}" placeholder="${"Email"}" class="${"svelte-1wo2eds"}"${add_attribute("value", email, 0)}>
-				<label for="${"message"}" class="${"svelte-1wo2eds"}">message: </label>
-				<textarea id="${"message"}" cols="${"50"}" rows="${"5"}" placeholder="${"Enter message here."}" class="${"svelte-1wo2eds"}">${""}</textarea>
-				<span id="${"message-success"}" class="${"alert hidden svelte-1wo2eds"}"${add_attribute("this", messageSuccess, 0)}>Thank you for reaching out to me! I will get back to you shortly.</span>
-				<span id="${"message-fail"}" class="${"alert hidden svelte-1wo2eds"}"${add_attribute("this", messageFail, 0)}>Your message failed to send. Check the information and try again.</span>
-				<button class="${"btn btn-main btn-contact"}" type="${"submit"}" value="${"submit"}">send message</button></form></div></div>
-</div>`;
-});
-var contact = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": Contact
-});
-var css$2 = {
-  code: ".container.svelte-qh7quo{position:relative;display:grid;place-items:center;grid-template-areas:'text text image'\n			'. scroll-btn .';min-height:70vh;margin:20px auto 0px auto;padding:2em}.scroll-btn.svelte-qh7quo{grid-area:scroll-btn}.image{grid-area:image;height:25vmax;width:35vmax;margin:20px;border-radius:0.9em;box-shadow:inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--about-text);background-position:center}.default-image.svelte-qh7quo{background:linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)), no-repeat;display:flex;justify-content:center;align-items:center}.content.svelte-qh7quo{grid-area:text;width:clamp(400px, 100%, 900px);font-size:1.5em;padding:10px}.about-p,.about-strong,.about-a,.about-li{margin:40px auto 40px auto;color:var(--about-text)}.about-h2{font-size:1.3em}.about-p,.about-strong{line-height:2em}@media only screen and (max-width: 1500px){.container.svelte-qh7quo{grid-template-areas:'image'\n				'text'\n				'scroll-btn';padding:5px}.image{height:50vmax;width:90vmax}.content.svelte-qh7quo{width:90%}}@media only screen and (max-width: 850px){.image{height:25vmax;width:50vmax}.image>p{font-size:2em}}",
-  map: `{"version":3,"file":"AboutStyles.svelte","sources":["AboutStyles.svelte"],"sourcesContent":["<script>\\n\\tconst scrollTop = () => {\\n\\t\\twindow.scrollTo(0, 0);\\n\\t};\\n<\/script>\\n\\n<div class=\\"container\\">\\n\\t<slot name=\\"image\\">\\n\\t\\t<div class=\\"image default-image\\">No content</div>\\n\\t</slot>\\n\\n\\t<div class=\\"content\\">\\n\\t\\t<slot name=\\"content\\">\\n\\t\\t\\t<div class=\\"content\\">nothing to show</div>\\n\\t\\t</slot>\\n\\t</div>\\n\\t<button class=\\"btn btn-main btn-center scroll-btn\\" on:click={scrollTop}>Scroll Top</button>\\n</div>\\n\\n<style>\\n\\t.container {\\n\\t\\tposition: relative;\\n\\t\\tdisplay: grid;\\n\\t\\tplace-items: center;\\n\\t\\tgrid-template-areas:\\n\\t\\t\\t'text text image'\\n\\t\\t\\t'. scroll-btn .';\\n\\t\\tmin-height: 70vh;\\n\\t\\tmargin: 20px auto 0px auto;\\n\\t\\tpadding: 2em;\\n\\t}\\n\\t.scroll-btn {\\n\\t\\tgrid-area: scroll-btn;\\n\\t}\\n\\n\\t:global(.image) {\\n\\t\\tgrid-area: image;\\n\\t\\theight: 25vmax;\\n\\t\\twidth: 35vmax;\\n\\t\\tmargin: 20px;\\n\\t\\tborder-radius: 0.9em;\\n\\t\\tbox-shadow: inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--about-text);\\n\\t\\tbackground-position: center;\\n\\t}\\n\\n\\t.default-image {\\n\\t\\tbackground: linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)), no-repeat;\\n\\t\\tdisplay: flex;\\n\\t\\tjustify-content: center;\\n\\t\\talign-items: center;\\n\\t}\\n\\n\\t.content {\\n\\t\\tgrid-area: text;\\n\\t\\twidth: clamp(400px, 100%, 900px);\\n\\t\\tfont-size: 1.5em;\\n\\t\\tpadding: 10px;\\n\\t}\\n\\t:global(.about-p),\\n\\t:global(.about-strong),\\n\\t:global(.about-a),\\n\\t:global(.about-li) {\\n\\t\\tmargin: 40px auto 40px auto;\\n\\t\\tcolor: var(--about-text);\\n\\t}\\n\\t:global(.about-h2) {\\n\\t\\tfont-size: 1.3em;\\n\\t}\\n\\n\\t:global(.about-p),\\n\\t:global(.about-strong) {\\n\\t\\tline-height: 2em;\\n\\t}\\n\\n\\t@media only screen and (max-width: 1500px) {\\n\\t\\t.container {\\n\\t\\t\\tgrid-template-areas:\\n\\t\\t\\t\\t'image'\\n\\t\\t\\t\\t'text'\\n\\t\\t\\t\\t'scroll-btn';\\n\\t\\t\\tpadding: 5px;\\n\\t\\t}\\n\\t\\t:global(.image) {\\n\\t\\t\\theight: 50vmax;\\n\\t\\t\\twidth: 90vmax;\\n\\t\\t}\\n\\t\\t.content {\\n\\t\\t\\twidth: 90%;\\n\\t\\t}\\n\\t}\\n\\n\\t@media only screen and (max-width: 850px) {\\n\\t\\t:global(.image) {\\n\\t\\t\\theight: 25vmax;\\n\\t\\t\\twidth: 50vmax;\\n\\t\\t}\\n\\t\\t:global(.image) > :global(p) {\\n\\t\\t\\tfont-size: 2em;\\n\\t\\t}\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAoBC,UAAU,cAAC,CAAC,AACX,QAAQ,CAAE,QAAQ,CAClB,OAAO,CAAE,IAAI,CACb,WAAW,CAAE,MAAM,CACnB,mBAAmB,CAClB,iBAAiB;GACjB,gBAAgB,CACjB,UAAU,CAAE,IAAI,CAChB,MAAM,CAAE,IAAI,CAAC,IAAI,CAAC,GAAG,CAAC,IAAI,CAC1B,OAAO,CAAE,GAAG,AACb,CAAC,AACD,WAAW,cAAC,CAAC,AACZ,SAAS,CAAE,UAAU,AACtB,CAAC,AAEO,MAAM,AAAE,CAAC,AAChB,SAAS,CAAE,KAAK,CAChB,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,CACb,MAAM,CAAE,IAAI,CACZ,aAAa,CAAE,KAAK,CACpB,UAAU,CAAE,KAAK,CAAC,CAAC,CAAC,CAAC,CAAC,IAAI,CAAC,IAAI,cAAc,CAAC,CAAC,CAAC,GAAG,CAAC,IAAI,CAAC,IAAI,CAAC,IAAI,YAAY,CAAC,CAC/E,mBAAmB,CAAE,MAAM,AAC5B,CAAC,AAED,cAAc,cAAC,CAAC,AACf,UAAU,CAAE,gBAAgB,KAAK,EAAE,CAAC,CAAC,EAAE,CAAC,CAAC,EAAE,CAAC,CAAC,KAAK,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,CAAC,SAAS,CACxF,OAAO,CAAE,IAAI,CACb,eAAe,CAAE,MAAM,CACvB,WAAW,CAAE,MAAM,AACpB,CAAC,AAED,QAAQ,cAAC,CAAC,AACT,SAAS,CAAE,IAAI,CACf,KAAK,CAAE,MAAM,KAAK,CAAC,CAAC,IAAI,CAAC,CAAC,KAAK,CAAC,CAChC,SAAS,CAAE,KAAK,CAChB,OAAO,CAAE,IAAI,AACd,CAAC,AACO,QAAQ,AAAC,CACT,aAAa,AAAC,CACd,QAAQ,AAAC,CACT,SAAS,AAAE,CAAC,AACnB,MAAM,CAAE,IAAI,CAAC,IAAI,CAAC,IAAI,CAAC,IAAI,CAC3B,KAAK,CAAE,IAAI,YAAY,CAAC,AACzB,CAAC,AACO,SAAS,AAAE,CAAC,AACnB,SAAS,CAAE,KAAK,AACjB,CAAC,AAEO,QAAQ,AAAC,CACT,aAAa,AAAE,CAAC,AACvB,WAAW,CAAE,GAAG,AACjB,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,MAAM,CAAC,AAAC,CAAC,AAC3C,UAAU,cAAC,CAAC,AACX,mBAAmB,CAClB,OAAO;IACP,MAAM;IACN,YAAY,CACb,OAAO,CAAE,GAAG,AACb,CAAC,AACO,MAAM,AAAE,CAAC,AAChB,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,AACd,CAAC,AACD,QAAQ,cAAC,CAAC,AACT,KAAK,CAAE,GAAG,AACX,CAAC,AACF,CAAC,AAED,OAAO,IAAI,CAAC,MAAM,CAAC,GAAG,CAAC,YAAY,KAAK,CAAC,AAAC,CAAC,AAClC,MAAM,AAAE,CAAC,AAChB,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,AACd,CAAC,AACO,MAAM,AAAC,CAAW,CAAC,AAAE,CAAC,AAC7B,SAAS,CAAE,GAAG,AACf,CAAC,AACF,CAAC"}`
-};
-var AboutStyles = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$2);
-  return `<div class="${"container svelte-qh7quo"}">${slots.image ? slots.image({}) : `
-		<div class="${"image default-image svelte-qh7quo"}">No content</div>
-	`}
-
-	<div class="${"content svelte-qh7quo"}">${slots.content ? slots.content({}) : `
-			<div class="${"content svelte-qh7quo"}">nothing to show</div>
-		`}</div>
-	<button class="${"btn btn-main btn-center scroll-btn svelte-qh7quo"}">Scroll Top</button>
-</div>`;
-});
-var AboutStyles$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": AboutStyles
-});
-var css$1 = {
-  code: ".local-image.svelte-1okodsa{background:linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),\n			url('/IMG_0261.png') no-repeat;background-size:contain;background-position:bottom;height:35vmax;width:25vmax}",
-  map: `{"version":3,"file":"AboutBluf.svelte","sources":["AboutBluf.svelte"],"sourcesContent":["<script lang=\\"ts\\">import SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';\\nimport AboutStyles from './AboutStyles.svelte';\\n<\/script>\\n\\n<div>\\n\\t<SubPageTitleBar title={'bluf'} colorVar={'white'} textColor={'var(--blue)'} />\\n\\t<AboutStyles>\\n\\t\\t<span slot=\\"image\\">\\n\\t\\t\\t<div class=\\"local-image image\\" />\\n\\t\\t</span>\\n\\t\\t<span slot=\\"content\\">\\n\\t\\t\\t<p class=\\"about-p\\">\\n\\t\\t\\t\\tI am a 24 year Navy veteran with a passion for finding and applying data-driven solutions to\\n\\t\\t\\t\\timprove business outcomes. In my years of service I have developed a passion for life-long\\n\\t\\t\\t\\tlearning and watching technology trends for ways to improve productivity, quality of work,\\n\\t\\t\\t\\tand quality of life.\\n\\t\\t\\t</p>\\n\\t\\t</span>\\n\\t</AboutStyles>\\n</div>\\n\\n<style>\\n\\t.local-image {\\n\\t\\tbackground: linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/IMG_0261.png') no-repeat;\\n\\t\\tbackground-size: contain;\\n\\t\\tbackground-position: bottom;\\n\\t\\theight: 35vmax;\\n\\t\\twidth: 25vmax;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AAsBC,YAAY,eAAC,CAAC,AACb,UAAU,CAAE,gBAAgB,KAAK,EAAE,CAAC,CAAC,EAAE,CAAC,CAAC,EAAE,CAAC,CAAC,KAAK,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,eAAe,CAAC,CAAC,SAAS,CAC/B,eAAe,CAAE,OAAO,CACxB,mBAAmB,CAAE,MAAM,CAC3B,MAAM,CAAE,MAAM,CACd,KAAK,CAAE,MAAM,AACd,CAAC"}`
-};
-var AboutBluf = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css$1);
-  return `<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "bluf",
-    colorVar: "white",
-    textColor: "var(--blue)"
-  }, {}, {})}
-	${validate_component(AboutStyles, "AboutStyles").$$render($$result, {}, {}, {
-    content: () => `<span slot="${"content"}"><p class="${"about-p"}">I am a 24 year Navy veteran with a passion for finding and applying data-driven solutions to
-				improve business outcomes. In my years of service I have developed a passion for life-long
-				learning and watching technology trends for ways to improve productivity, quality of work,
-				and quality of life.
-			</p></span>`,
-    image: () => `<span slot="${"image"}"><div class="${"local-image image svelte-1okodsa"}"></div></span>`
-  })}
-</div>`;
-});
-var AboutBluf$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": AboutBluf
-});
-var css = {
-  code: ".local-image.svelte-14sisee{background:linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),\n			url('/FS0A5054.png') no-repeat;background-size:cover}",
-  map: `{"version":3,"file":"AboutBackstory.svelte","sources":["AboutBackstory.svelte"],"sourcesContent":["<script lang=\\"ts\\">import SubPageTitleBar from '../../../components/SubPageTitleBar.svelte';\\nimport AboutStyles from './AboutStyles.svelte';\\n<\/script>\\n\\n<div>\\n\\t<SubPageTitleBar title={'backstory'} colorVar={'white'} textColor={'var(--blue)'} />\\n\\t<AboutStyles>\\n\\t\\t<span slot=\\"image\\">\\n\\t\\t\\t<div class=\\"local-image image\\" />\\n\\t\\t</span>\\n\\t\\t<span slot=\\"content\\">\\n\\t\\t\\t<p class=\\"about-p\\">\\n\\t\\t\\t\\tBorn and raised a California boy, I enlisted in the Navy in 1997 as a\\n\\t\\t\\t\\t<a\\n\\t\\t\\t\\t\\tclass=\\"about-a\\"\\n\\t\\t\\t\\t\\ttitle=\\"Submarine Communications Electronics Technician description.\\"\\n\\t\\t\\t\\t\\thref=\\"https://www.careersinthemilitary.com/service-career-detail/navy/electrical-instrument-and-equipment-repairers/electronics-technician--submarine--communications\\"\\n\\t\\t\\t\\t\\t>Submarine Electronics Technician (Communications).</a\\n\\t\\t\\t\\t>\\n\\t\\t\\t\\tAfter 9 years, I promoted to Chief Petty Officer, and after 16 years commissioned as a\\n\\t\\t\\t\\t<a\\n\\t\\t\\t\\t\\tclass=\\"about-a\\"\\n\\t\\t\\t\\t\\ttitle=\\"Submarine Communications Limited Duty Officer (LDO) description.\\"\\n\\t\\t\\t\\t\\thref=\\"https://www.cool.osd.mil/usn/officer/odc629x.htm\\"\\n\\t\\t\\t\\t\\t>Submarine Communications Limited Duty Officer</a\\n\\t\\t\\t\\t>. In 2015, I completed my Bachelor's degree in Business Administration from Excelsior\\n\\t\\t\\t\\tCollege. After completing My Information Warfare Officer qualification in 2016, I\\n\\t\\t\\t\\tredesignated to the\\n\\t\\t\\t\\t<a\\n\\t\\t\\t\\t\\tclass=\\"about-a\\"\\n\\t\\t\\t\\t\\ttitle=\\"Information Professional Corps description.\\"\\n\\t\\t\\t\\t\\thref=\\"https://www.navy.com/careers/information-professional\\"\\n\\t\\t\\t\\t\\t>Information Professional Corp</a\\n\\t\\t\\t\\t>. During the same time I was working on my Technology/Innovation Management MBA. However, I\\n\\t\\t\\t\\ttook 2020 off due to the COVID-19 pandemic. In that time I taught myself web-development to\\n\\t\\t\\t\\tsupport changing workplace requirements. At the start of 2021, I re-engaged on my MBA and\\n\\t\\t\\t\\tcontinue to serve in the US Navy. I have four classes left, and intend to finish in the near\\n\\t\\t\\t\\tfuture. I am currently working and living in Washington State enjoying the Pacific Northwest\\n\\t\\t\\t\\twith my wife and four daughters.\\n\\t\\t\\t</p>\\n\\t\\t</span>\\n\\t</AboutStyles>\\n</div>\\n\\n<style>\\n\\t.local-image {\\n\\t\\tbackground: linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),\\n\\t\\t\\turl('/FS0A5054.png') no-repeat;\\n\\t\\tbackground-size: cover;\\n\\t}\\n</style>\\n"],"names":[],"mappings":"AA6CC,YAAY,eAAC,CAAC,AACb,UAAU,CAAE,gBAAgB,KAAK,EAAE,CAAC,CAAC,EAAE,CAAC,CAAC,EAAE,CAAC,CAAC,KAAK,CAAC,CAAC,CAAC,KAAK,EAAE,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC;GAC7E,IAAI,eAAe,CAAC,CAAC,SAAS,CAC/B,eAAe,CAAE,KAAK,AACvB,CAAC"}`
-};
-var AboutBackstory = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  $$result.css.add(css);
-  return `<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "backstory",
-    colorVar: "white",
-    textColor: "var(--blue)"
-  }, {}, {})}
-	${validate_component(AboutStyles, "AboutStyles").$$render($$result, {}, {}, {
-    content: () => `<span slot="${"content"}"><p class="${"about-p"}">Born and raised a California boy, I enlisted in the Navy in 1997 as a
-				<a class="${"about-a"}" title="${"Submarine Communications Electronics Technician description."}" href="${"https://www.careersinthemilitary.com/service-career-detail/navy/electrical-instrument-and-equipment-repairers/electronics-technician--submarine--communications"}">Submarine Electronics Technician (Communications).</a>
-				After 9 years, I promoted to Chief Petty Officer, and after 16 years commissioned as a
-				<a class="${"about-a"}" title="${"Submarine Communications Limited Duty Officer (LDO) description."}" href="${"https://www.cool.osd.mil/usn/officer/odc629x.htm"}">Submarine Communications Limited Duty Officer</a>. In 2015, I completed my Bachelor&#39;s degree in Business Administration from Excelsior
-				College. After completing My Information Warfare Officer qualification in 2016, I
-				redesignated to the
-				<a class="${"about-a"}" title="${"Information Professional Corps description."}" href="${"https://www.navy.com/careers/information-professional"}">Information Professional Corp</a>. During the same time I was working on my Technology/Innovation Management MBA. However, I
-				took 2020 off due to the COVID-19 pandemic. In that time I taught myself web-development to
-				support changing workplace requirements. At the start of 2021, I re-engaged on my MBA and
-				continue to serve in the US Navy. I have four classes left, and intend to finish in the near
-				future. I am currently working and living in Washington State enjoying the Pacific Northwest
-				with my wife and four daughters.
-			</p></span>`,
-    image: () => `<span slot="${"image"}"><div class="${"local-image image svelte-14sisee"}"></div></span>`
-  })}
-</div>`;
-});
-var AboutBackstory$1 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": AboutBackstory
-});
-var About = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  return `${$$result.head += `${$$result.title = `<title>Nathan Meeker || About</title>`, ""}`, ""}
-
-<div>${validate_component(SubPageTitleBar, "SubPageTitleBar").$$render($$result, {
-    title: "about me",
-    colorVar: "white",
-    textColor: "var(--blue)"
-  }, {}, {})}
-	${validate_component(AboutBluf, "AboutBluf").$$render($$result, {}, {}, {})}
-	${validate_component(AboutBackstory, "AboutBackstory").$$render($$result, {}, {}, {})}
-</div>`;
-});
-var index = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": About
-});
+// .svelte-kit/output/server/app.js
+init_shims();
+init_app_5398027c();
 
 // .svelte-kit/netlify/entry.js
 init();
@@ -8102,3 +8278,4 @@ function split_headers(headers) {
   handler
 });
 /*! @license DOMPurify 2.3.3 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/2.3.3/LICENSE */
+/*! fetch-blob. MIT License. Jimmy Wärting <https://jimmy.warting.se/opensource> */
