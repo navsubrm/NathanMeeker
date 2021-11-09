@@ -34,7 +34,7 @@
 	}
 	h1 {
 		height: max-content;
-		font-size: 5.5vmax;
+		font-size: 4.5vmax;
 		font-family: Roboto, Helvetica, sans-serif;
 		font-weight: 700;
 		text-transform: uppercase;
@@ -74,7 +74,7 @@
 			min-height: 15vh;
 		}
 		h1 {
-			font-size: 3em;
+			font-size: 2.5em;
 			text-align: center;
 			letter-spacing: normal;
 		}

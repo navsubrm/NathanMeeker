@@ -11,7 +11,7 @@
 	/>
 	<ExperienceStyles>
 		<span slot="image">
-			<div class="general-image image" />
+			<div class="general-image experience-image" />
 		</span>
 		<span slot="content">
 			<h2 class="experience-h2">
@@ -49,11 +49,9 @@
 
 <style>
 	.general-image {
-		height: 45vmax;
-		width: 35vmax;
-		background: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),
-			url('/Loose_lips_might_sink_ships.jpeg') no-repeat;
-		background: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),
+		height: 30vmax;
+		width: 25vmax;
+		background: linear-gradient(rgba(238, 174, 37, 0.4), rgba(63, 238, 230, 0.6)),
 			url('/Loose_lips_might_sink_ships.jpeg') no-repeat;
 		background-size: cover;
 		background-position: center;
@@ -64,15 +62,15 @@
 
 	@media only screen and (max-width: 1500px) {
 		.general-image {
-			height: 50vmax;
-			width: 35vmax;
+			height: 30vmax;
+			width: 25vmax;
 		}
 	}
 
 	@media only screen and (max-width: 850px) {
 		.general-image {
-			height: 25vmax;
-			width: 50vmax;
+			height: 30vmax;
+			width: 20vmax;
 			transform: translateY(0);
 		}
 	}

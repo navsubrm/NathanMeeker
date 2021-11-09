@@ -6,7 +6,7 @@
 
 <div class="container">
 	<slot name="image">
-		<div class="image default-image">No content</div>
+		<div class="about-image default-image">No content</div>
 	</slot>
 
 	<div class="content">
@@ -23,45 +23,42 @@
 		display: grid;
 		place-items: center;
 		grid-template-areas:
-			'text text image'
-			'. scroll-btn .';
+			'text image'
+			'scroll-btn scroll-btn';
 		min-height: 70vh;
 		margin: 20px auto 0px auto;
-		padding: 2em;
+		padding: 4em;
 	}
 	.scroll-btn {
 		grid-area: scroll-btn;
 	}
 
-	:global(.image) {
+	:global(.about-image) {
 		grid-area: image;
-		height: 25vmax;
+		height: 20vmax;
 		width: 35vmax;
-		margin: 20px;
+		margin-right: 100px;
 		border-radius: 0.9em;
-		box-shadow: inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--about-text);
+		box-shadow: inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text);
 		background-position: center;
 	}
 
 	.default-image {
 		background: linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)), no-repeat;
-		display: flex;
-		justify-content: center;
-		align-items: center;
 	}
 
 	.content {
 		grid-area: text;
-		width: clamp(400px, 100%, 900px);
-		font-size: 1.5em;
-		padding: 10px;
+		width: clamp(400px, 90%, 900px);
+		font-size: 18px;
+		padding: 50px;
 	}
 	:global(.about-p),
 	:global(.about-strong),
 	:global(.about-a),
 	:global(.about-li) {
 		margin: 40px auto 40px auto;
-		color: var(--about-text);
+		color: var(--experience-text);
 	}
 	:global(.about-h2) {
 		font-size: 1.3em;
@@ -80,9 +77,10 @@
 				'scroll-btn';
 			padding: 5px;
 		}
-		:global(.image) {
-			height: 50vmax;
-			width: 90vmax;
+		:global(.about-image) {
+			height: 30vmax;
+			width: 50vmax;
+			margin-right: 0;
 		}
 		.content {
 			width: 90%;
@@ -90,11 +88,11 @@
 	}
 
 	@media only screen and (max-width: 850px) {
-		:global(.image) {
-			height: 25vmax;
-			width: 50vmax;
+		:global(.about-image) {
+			height: 30vmax;
+			width: 55vmax;
 		}
-		:global(.image) > :global(p) {
+		:global(.about-image) > :global(p) {
 			font-size: 2em;
 		}
 	}

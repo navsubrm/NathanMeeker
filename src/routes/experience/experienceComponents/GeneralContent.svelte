@@ -7,7 +7,7 @@
 	<SubPageTitleBar title={'General'} colorVar={'white'} textColor={'rgb(238, 174, 37)'} />
 	<ExperienceStyles>
 		<span slot="image">
-			<div class="general-image image" />
+			<div class="general-image experience-image" />
 		</span>
 		<span slot="content">
 			<div>
@@ -43,7 +43,7 @@
 
 <style>
 	.general-image {
-		background: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)),
+		background: linear-gradient(rgba(238, 174, 37, 0.4), rgba(63, 238, 230, 0.6)),
 			url('/geo_at_sea.jpeg') no-repeat;
 		background-size: cover;
 	}

@@ -7,7 +7,7 @@
 	<SubPageTitleBar title={'backstory'} colorVar={'white'} textColor={'var(--blue)'} />
 	<AboutStyles>
 		<span slot="image">
-			<div class="local-image image" />
+			<div class="local-image about-image" />
 		</span>
 		<span slot="content">
 			<p class="about-p">
@@ -45,7 +45,7 @@
 
 <style>
 	.local-image {
-		background: linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),
+		background: linear-gradient(rgba(49, 82, 80, 0.309), rgba(63, 238, 230, 0.5)),
 			url('/FS0A5054.png') no-repeat;
 		background-size: cover;
 	}

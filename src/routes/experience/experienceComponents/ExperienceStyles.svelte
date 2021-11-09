@@ -6,7 +6,7 @@
 
 <div class="container">
 	<slot name="image">
-		<div class="image default-image">No content</div>
+		<div class="experience-image default-image">No content</div>
 	</slot>
 
 	<div class="content">
@@ -24,35 +24,35 @@
 		display: grid;
 		place-items: center;
 		grid-template-areas:
-			'text text image'
-			'. scroll-btn .';
+			'text image'
+			'scroll-btn scroll-btn';
 		min-height: 70vh;
 		margin: 20px auto 0px auto;
-		padding: 2em;
+		padding: 4em;
 	}
 	.scroll-btn {
 		grid-area: scroll-btn;
 	}
 
-	:global(.image) {
+	:global(.experience-image) {
 		grid-area: image;
-		height: 25vmax;
-		width: 40vmax;
-		margin: 20px;
+		height: 20vmax;
+		width: 35vmax;
+		margin-right: 100px;
 		border-radius: 0.9em;
 		box-shadow: inset 0 0 40px var(--shadow-color), 5px 10px 25px var(--experience-text);
 		background-position: center;
 	}
 
 	.default-image {
-		background: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7)), no-repeat;
+		background: linear-gradient(rgba(238, 174, 37, 0.3), rgba(63, 238, 230, 0.5)), no-repeat;
 	}
 
 	.content {
 		grid-area: text;
-		width: clamp(400px, 100%, 900px);
-		font-size: 1.5em;
-		padding: 10px;
+		width: clamp(400px, 90%, 900px);
+		font-size: 18px;
+		padding: 50px;
 	}
 	:global(.experience-p),
 	:global(.experience-strong),
@@ -78,9 +78,10 @@
 				'scroll-btn';
 			padding: 5px;
 		}
-		:global(.image) {
-			height: 50vmax;
-			width: 90vmax;
+		:global(.experience-image) {
+			height: 30vmax;
+			width: 50vmax;
+			margin-right: 0;
 		}
 		.content {
 			width: 90%;
@@ -88,11 +89,11 @@
 	}
 
 	@media only screen and (max-width: 850px) {
-		:global(.image) {
-			height: 25vmax;
-			width: 50vmax;
+		:global(.experience-image) {
+			height: 30vmax;
+			width: 55vmax;
 		}
-		:global(.image) > :global(p) {
+		:global(.experience-image) > :global(p) {
 			font-size: 2em;
 		}
 	}

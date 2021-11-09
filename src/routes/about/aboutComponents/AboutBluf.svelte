@@ -4,17 +4,18 @@
 </script>
 
 <div>
-	<SubPageTitleBar title={'bluf'} colorVar={'white'} textColor={'var(--blue)'} />
+	<SubPageTitleBar title={'Summary'} colorVar={'white'} textColor={'var(--blue)'} />
 	<AboutStyles>
 		<span slot="image">
-			<div class="local-image image" />
+			<div class="local-image about-image" />
 		</span>
 		<span slot="content">
 			<p class="about-p">
 				I am a 24 year Navy veteran with a passion for finding and applying data-driven solutions to
-				improve business outcomes. In my years of service I have developed a passion for life-long
-				learning and watching technology trends for ways to improve productivity, quality of work,
-				and quality of life.
+				improve business outcomes. During my life, I have developed a passion for life-long
+				learning, efficiency, and developing the best data-driven solutions to improve productivity,
+				quality of work, and quality of life. I believe we can work smart, get it done, and still
+				have time for the ones we love the most.
 			</p>
 		</span>
 	</AboutStyles>
@@ -22,11 +23,11 @@
 
 <style>
 	.local-image {
-		background: linear-gradient(rgba(49, 82, 80, 0.609), rgba(63, 238, 230, 0.7)),
-			url('/IMG_0261.png') no-repeat;
+		background: linear-gradient(rgba(49, 82, 80, 0.309), rgba(63, 238, 230, 0.5)),
+			url('/UPLOAD 2.png') no-repeat;
 		background-size: contain;
 		background-position: bottom;
-		height: 35vmax;
-		width: 25vmax;
+		height: 28vmax;
+		width: 20vmax;
 	}
 </style>

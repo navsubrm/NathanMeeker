@@ -7,7 +7,7 @@
 	<SubPageTitleBar title={'Education'} colorVar={'white'} textColor={'rgb(238, 174, 37)'} />
 	<ExperienceStyles>
 		<span slot="image">
-			<div class="general-image image">
+			<div class="general-image experience-image">
 				<h2>Knowledge is Power!</h2>
 			</div>
 		</span>
@@ -82,8 +82,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7));
-		background: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.7));
+		background: linear-gradient(rgba(238, 174, 37, 0.6), rgba(63, 238, 230, 0.9));
 		background-size: cover;
 	}
 	.general-image > h2 {
@@ -95,15 +94,15 @@
 
 	@media only screen and (max-width: 1500px) {
 		.general-image {
-			height: 30vmax;
-			width: 90vmax;
+			height: 20vmax;
+			width: 60vmax;
 		}
 	}
 
 	@media only screen and (max-width: 850px) {
 		.general-image {
-			height: 25vmax;
-			width: 50vmax;
+			height: 15vmax;
+			width: 25vmax;
 		}
 		.general-image > h2 {
 			font-size: 2em;
